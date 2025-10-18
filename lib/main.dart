@@ -18,7 +18,15 @@ class RecipeApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorSeed = const Color(0xFF6B8DFF); // fris blauw
+    // Mint‑green, soft surfaces, Poppins typography
+    const mintSeed = Color(0xFF6FCF97);
+    const softBg = Color(0xFFF2F7F4);
+
+    final base = ThemeData(
+      useMaterial3: true,
+      colorSchemeSeed: mintSeed,
+    );
+
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => ProcessRecipeCubit(sl<RecipeRepository>())),
@@ -27,10 +35,23 @@ class RecipeApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Recepten',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorSchemeSeed: colorSeed,
-          textTheme: GoogleFonts.interTextTheme(),
+        theme: base.copyWith(
+          scaffoldBackgroundColor: softBg,
+          textTheme: GoogleFonts.poppinsTextTheme(base.textTheme),
+          cardTheme: CardThemeData(
+            color: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            elevation: 0,
+          ),
+          appBarTheme: base.appBarTheme.copyWith(
+            elevation: 0,
+            centerTitle: false,
+            backgroundColor: Colors.transparent,
+          ),
+          listTileTheme: const ListTileThemeData(
+            contentPadding: EdgeInsets.symmetric(horizontal: 16),
+            dense: true,
+          ),
         ),
         home: const InputRecipePage(),
       ),
