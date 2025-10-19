@@ -23,11 +23,10 @@ class RecipeLocalDataSource {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
 
-      // Verwijder bestaande kinderen
       await txn.delete('ingredients', where: 'recipe_id = ?', whereArgs: [recipe.id]);
       await txn.delete('line_items', where: 'recipe_id = ?', whereArgs: [recipe.id]);
 
-      // Insert ingrediënten
+      // Insert ingredients
       for (final ing in recipe.ingredients) {
         await txn.insert('ingredients', {
           'recipe_id': recipe.id,
@@ -54,7 +53,6 @@ class RecipeLocalDataSource {
     final db = _database.db;
     final rows = await db.query('recipes', orderBy: 'created_at DESC');
 
-    // Batch children ophalen en groeperen
     final ids = rows.map((r) => r['id'] as String).toList();
     final List<Map<String, Object?>> ingRows = ids.isEmpty
         ? []

@@ -15,9 +15,9 @@ class RecipeRemoteDataSource {
       return ProcessResponse.fromJson(res.data as Map<String, dynamic>);
     } on DioException catch (e) {
       final msg = e.response?.data ?? e.message;
-      throw Exception('Netwerkfout: $msg');
+      throw Exception('Network error: $msg');
     } catch (e) {
-      throw Exception('Onverwachte fout: $e');
+      throw Exception('Unexpected error: $e');
     }
   }
 }

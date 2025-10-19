@@ -35,7 +35,6 @@ Future<void> setupInjector() async {
       local: sl<RecipeLocalDataSource>(),
     ),
   );
-
-  // Wachten tot async singletons klaar zijn (DB).
+  
   await sl.allReady();
 }
