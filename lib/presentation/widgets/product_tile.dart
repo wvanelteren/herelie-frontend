@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../core/utils/currency_format.dart';
 import '../../domain/entities/ingredient.dart';
-import '../../domain/entities/line_item.dart';
+import '../../domain/entities/pp_ingredient.dart';
 
 class ProductTile extends StatelessWidget {
-  final LineItem item;
+  final PurchasePlanIngredient item;
   final Ingredient? ingredient;
 
   const ProductTile({super.key, required this.item, this.ingredient});
@@ -13,14 +13,19 @@ class ProductTile extends StatelessWidget {
     final a = amount;
     final u = unit ?? '';
     if (a == null && u.isEmpty) return '';
-    final numStr = a == null ? '' : (a % 1 == 0 ? a.toStringAsFixed(0) : a.toString());
+    final numStr = a == null
+        ? ''
+        : (a % 1 == 0 ? a.toStringAsFixed(0) : a.toString());
     return [numStr, u].where((s) => s.isNotEmpty).join(' ').trim();
   }
 
   String _ingredientDisplay() {
     if (ingredient == null) return '';
     final quantity = _formatAmountUnit(ingredient!.amount, ingredient!.unit);
-    return [quantity, ingredient!.name].where((s) => s.isNotEmpty).join(' ').trim();
+    return [
+      quantity,
+      ingredient!.name,
+    ].where((s) => s.isNotEmpty).join(' ').trim();
   }
 
   @override
@@ -28,6 +33,8 @@ class ProductTile extends StatelessWidget {
     final theme = Theme.of(context);
     final amountUnit = _formatAmountUnit(item.amount, item.unit);
     final ingredientDescription = _ingredientDisplay();
+    final packCount = item.packCount;
+    final showPackCount = packCount != null && packCount > 0;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -46,7 +53,7 @@ class ProductTile extends StatelessWidget {
           Row(
             children: [
               Text(
-                formatEuro(item.lineCostEur),
+                formatEuro(item.ppIngredientCostEur),
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: theme.colorScheme.primary,
@@ -57,6 +64,16 @@ class ProductTile extends StatelessWidget {
                 Text(
                   amountUnit,
                   style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+              if (showPackCount) ...[
+                const Spacer(),
+                Text(
+                  'x$packCount',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),

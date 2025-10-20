@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/utils/currency_format.dart';
+import '../../domain/entities/ingredient.dart';
 import '../../domain/entities/recipe.dart';
 import '../widgets/ingredient_tile.dart';
 import '../widgets/product_tile.dart';
@@ -27,10 +28,7 @@ class _ParsedRecipePageState extends State<ParsedRecipePage> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              cs.surfaceContainerHighest,
-              theme.scaffoldBackgroundColor,
-            ],
+            colors: [cs.surfaceContainerHighest, theme.scaffoldBackgroundColor],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -56,9 +54,14 @@ class _ParsedRecipePageState extends State<ParsedRecipePage> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: Card(
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     child: Row(
                       children: [
                         _Metric(
@@ -67,16 +70,21 @@ class _ParsedRecipePageState extends State<ParsedRecipePage> {
                         ),
                         const Spacer(),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: cs.secondaryContainer,
                             borderRadius: BorderRadius.circular(100),
                           ),
-                          child: Text('Porties: ${widget.recipe.servings}',
-                              style: theme.textTheme.labelLarge?.copyWith(
-                                color: cs.onSecondaryContainer,
-                                fontWeight: FontWeight.w600,
-                              )),
+                          child: Text(
+                            'Porties: ${widget.recipe.servings}',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: cs.onSecondaryContainer,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -109,9 +117,17 @@ class _ParsedRecipePageState extends State<ParsedRecipePage> {
                   },
                   style: ButtonStyle(
                     visualDensity: VisualDensity.compact,
-                    padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 14)),
-                    side: WidgetStatePropertyAll(BorderSide(color: cs.outlineVariant)),
-                    shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                    padding: const WidgetStatePropertyAll(
+                      EdgeInsets.symmetric(horizontal: 14),
+                    ),
+                    side: WidgetStatePropertyAll(
+                      BorderSide(color: cs.outlineVariant),
+                    ),
+                    shape: WidgetStatePropertyAll(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -143,7 +159,6 @@ class _IngredientsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Card(
       elevation: 0,
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -154,7 +169,8 @@ class _IngredientsList extends StatelessWidget {
           children: [
             _SectionHeader(
               title: 'Ingrediënten',
-              count: '${recipe.ingredients.length} item${recipe.ingredients.length == 1 ? '' : 's'}',
+              count:
+                  '${recipe.ingredients.length} item${recipe.ingredients.length == 1 ? '' : 's'}',
             ),
             const Divider(height: 1),
             ListView.separated(
@@ -162,7 +178,8 @@ class _IngredientsList extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               itemCount: recipe.ingredients.length,
-              itemBuilder: (context, i) => IngredientTile(ingredient: recipe.ingredients[i]),
+              itemBuilder: (context, i) =>
+                  IngredientTile(ingredient: recipe.ingredients[i]),
               separatorBuilder: (_, __) => const Divider(height: 1),
             ),
           ],
@@ -178,7 +195,10 @@ class _ProductsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final ingredientLookup = {
+      for (final ing in recipe.ingredients)
+        if (ing.id != null) ing.id!: ing,
+    };
     return Card(
       elevation: 0,
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -189,20 +209,26 @@ class _ProductsList extends StatelessWidget {
           children: [
             _SectionHeader(
               title: 'Producten',
-              count: '${recipe.lineItems.length} item${recipe.lineItems.length == 1 ? '' : 's'}',
+              count:
+                  '${recipe.purchasePlanIngredients.length} item${recipe.purchasePlanIngredients.length == 1 ? '' : 's'}',
             ),
             const Divider(height: 1),
             ListView.separated(
               padding: EdgeInsets.zero,
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
-              itemCount: recipe.lineItems.length,
+              itemCount: recipe.purchasePlanIngredients.length,
               itemBuilder: (context, i) {
-                final ingredient = i < recipe.ingredients.length ? recipe.ingredients[i] : null;
-                return ProductTile(
-                  item: recipe.lineItems[i],
-                  ingredient: ingredient,
-                );
+                final plan = recipe.purchasePlanIngredients[i];
+                Ingredient? mappedIngredient;
+                for (final id in plan.ingredientIds) {
+                  final match = ingredientLookup[id];
+                  if (match != null) {
+                    mappedIngredient = match;
+                    break;
+                  }
+                }
+                return ProductTile(item: plan, ingredient: mappedIngredient);
               },
               separatorBuilder: (_, __) => const Divider(height: 1),
             ),
@@ -226,11 +252,18 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
       child: Row(
         children: [
-          Text(title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+          Text(
+            title,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           const Spacer(),
           Text(
             count,
-            style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -250,9 +283,19 @@ class _Metric extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: theme.textTheme.labelLarge?.copyWith(color: cs.onSurfaceVariant)),
+        Text(
+          label,
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: cs.onSurfaceVariant,
+          ),
+        ),
         const SizedBox(height: 2),
-        Text(value, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+        Text(
+          value,
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ],
     );
   }

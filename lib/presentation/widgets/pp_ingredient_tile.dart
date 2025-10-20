@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../core/utils/currency_format.dart';
-import '../../domain/entities/line_item.dart';
+import '../../domain/entities/pp_ingredient.dart';
 
-class LineItemTile extends StatelessWidget {
-  final LineItem item;
-  const LineItemTile({super.key, required this.item});
+class PpIngredientTile extends StatelessWidget {
+  final PurchasePlanIngredient item;
+  const PpIngredientTile({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +22,10 @@ class LineItemTile extends StatelessWidget {
 
     return ListTile(
       title: Text(title),
-      trailing: Text(formatEuro(item.lineCostEur), style: const TextStyle(fontWeight: FontWeight.w700)),
+      trailing: Text(
+        formatEuro(item.ppIngredientCostEur),
+        style: const TextStyle(fontWeight: FontWeight.w700),
+      ),
       dense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16),
     );

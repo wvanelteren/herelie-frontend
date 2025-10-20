@@ -31,29 +31,39 @@ ApiRecipe _$ApiRecipeFromJson(Map<String, dynamic> json) => ApiRecipe(
 Map<String, dynamic> _$ApiRecipeToJson(ApiRecipe instance) => <String, dynamic>{
   'title': instance.title,
   'servings': instance.servings,
-  'ingredients': instance.ingredients,
+  'ingredients': instance.ingredients.map((e) => e.toJson()).toList(),
 };
 
 ApiIngredient _$ApiIngredientFromJson(Map<String, dynamic> json) =>
     ApiIngredient(
+      ingredientId: json['ingredient_id'] as String?,
+      parsedIngredient: json['parsed_ingredient'] == null
+          ? null
+          : IngredientDetails.fromJson(
+              json['parsed_ingredient'] as Map<String, dynamic>,
+            ),
       original: json['original'] == null
           ? null
-          : OriginalIngredient.fromJson(
+          : IngredientDetails.fromJson(
               json['original'] as Map<String, dynamic>,
             ),
     );
 
 Map<String, dynamic> _$ApiIngredientToJson(ApiIngredient instance) =>
-    <String, dynamic>{'original': instance.original};
+    <String, dynamic>{
+      'ingredient_id': instance.ingredientId,
+      'parsed_ingredient': instance.parsedIngredient,
+      'original': instance.original,
+    };
 
-OriginalIngredient _$OriginalIngredientFromJson(Map<String, dynamic> json) =>
-    OriginalIngredient(
+IngredientDetails _$IngredientDetailsFromJson(Map<String, dynamic> json) =>
+    IngredientDetails(
       name: json['name'] as String,
       unit: json['unit'] as String?,
       amount: (json['amount'] as num?)?.toDouble(),
     );
 
-Map<String, dynamic> _$OriginalIngredientToJson(OriginalIngredient instance) =>
+Map<String, dynamic> _$IngredientDetailsToJson(IngredientDetails instance) =>
     <String, dynamic>{
       'name': instance.name,
       'unit': instance.unit,
@@ -63,65 +73,97 @@ Map<String, dynamic> _$OriginalIngredientToJson(OriginalIngredient instance) =>
 Optimizer _$OptimizerFromJson(Map<String, dynamic> json) => Optimizer(
   jobId: json['job_id'] as String,
   schemaVersion: json['schema_version'] as String,
-  solutions: (json['solutions'] as List<dynamic>)
-      .map((e) => Solution.fromJson(e as Map<String, dynamic>))
-      .toList(),
+  result: json['result'] == null
+      ? null
+      : OptimizerResult.fromJson(json['result'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$OptimizerToJson(Optimizer instance) => <String, dynamic>{
   'job_id': instance.jobId,
   'schema_version': instance.schemaVersion,
-  'solutions': instance.solutions.map((e) => e.toJson()).toList(),
+  'result': instance.result?.toJson(),
 };
+
+OptimizerResult _$OptimizerResultFromJson(Map<String, dynamic> json) =>
+    OptimizerResult(
+      solutions: (json['solutions'] as List<dynamic>)
+          .map((e) => Solution.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+Map<String, dynamic> _$OptimizerResultToJson(OptimizerResult instance) =>
+    <String, dynamic>{
+      'solutions': instance.solutions.map((e) => e.toJson()).toList(),
+    };
 
 Solution _$SolutionFromJson(Map<String, dynamic> json) => Solution(
   profile: json['profile'] as String,
   totalCostEur: (json['total_cost_eur'] as num).toDouble(),
-  lineItems: (json['line_items'] as List<dynamic>)
-      .map((e) => LineItemModel.fromJson(e as Map<String, dynamic>))
+  purchasePlan: (json['purchase_plan'] as List<dynamic>)
+      .map((e) => IngredientPurchasePlan.fromJson(e as Map<String, dynamic>))
       .toList(),
 );
 
 Map<String, dynamic> _$SolutionToJson(Solution instance) => <String, dynamic>{
   'profile': instance.profile,
   'total_cost_eur': instance.totalCostEur,
-  'line_items': instance.lineItems.map((e) => e.toJson()).toList(),
+  'purchase_plan': instance.purchasePlan.map((e) => e.toJson()).toList(),
 };
 
-LineItemModel _$LineItemModelFromJson(Map<String, dynamic> json) =>
-    LineItemModel(
-      product: Product.fromJson(json['product'] as Map<String, dynamic>),
-      total: json['total'] == null
-          ? null
-          : PackOrTotal.fromJson(json['total'] as Map<String, dynamic>),
-      prices: Prices.fromJson(json['prices'] as Map<String, dynamic>),
-    );
+IngredientPurchasePlan _$IngredientPurchasePlanFromJson(
+  Map<String, dynamic> json,
+) => IngredientPurchasePlan(
+  ingredientIds: (json['ingredient_ids'] as List<dynamic>)
+      .map((e) => e as String)
+      .toList(),
+  requested: json['requested'] == null
+      ? null
+      : Quantity.fromJson(json['requested'] as Map<String, dynamic>),
+  fulfilled: json['fulfilled'] == null
+      ? null
+      : Quantity.fromJson(json['fulfilled'] as Map<String, dynamic>),
+  packs:
+      (json['packs'] as List<dynamic>?)
+          ?.map((e) => Pack.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      [],
+);
 
-Map<String, dynamic> _$LineItemModelToJson(LineItemModel instance) =>
-    <String, dynamic>{
-      'product': instance.product.toJson(),
-      'total': instance.total?.toJson(),
-      'prices': instance.prices.toJson(),
-    };
-
-Product _$ProductFromJson(Map<String, dynamic> json) =>
-    Product(title: json['title'] as String);
-
-Map<String, dynamic> _$ProductToJson(Product instance) => <String, dynamic>{
-  'title': instance.title,
+Map<String, dynamic> _$IngredientPurchasePlanToJson(
+  IngredientPurchasePlan instance,
+) => <String, dynamic>{
+  'ingredient_ids': instance.ingredientIds,
+  'requested': instance.requested?.toJson(),
+  'fulfilled': instance.fulfilled?.toJson(),
+  'packs': instance.packs.map((e) => e.toJson()).toList(),
 };
 
-PackOrTotal _$PackOrTotalFromJson(Map<String, dynamic> json) => PackOrTotal(
+Quantity _$QuantityFromJson(Map<String, dynamic> json) => Quantity(
   amount: (json['amount'] as num?)?.toDouble(),
   unit: json['unit'] as String?,
 );
 
-Map<String, dynamic> _$PackOrTotalToJson(PackOrTotal instance) =>
-    <String, dynamic>{'amount': instance.amount, 'unit': instance.unit};
-
-Prices _$PricesFromJson(Map<String, dynamic> json) =>
-    Prices(lineEur: (json['line_eur'] as num).toDouble());
-
-Map<String, dynamic> _$PricesToJson(Prices instance) => <String, dynamic>{
-  'line_eur': instance.lineEur,
+Map<String, dynamic> _$QuantityToJson(Quantity instance) => <String, dynamic>{
+  'amount': instance.amount,
+  'unit': instance.unit,
 };
+
+Pack _$PackFromJson(Map<String, dynamic> json) => Pack(
+  ingredientCostEur: (json['ingredient_cost_eur'] as num?)?.toDouble(),
+  metadata: json['metadata'] == null
+      ? null
+      : PackMetadata.fromJson(json['metadata'] as Map<String, dynamic>),
+  count: (json['packs'] as num?)?.toInt(),
+);
+
+Map<String, dynamic> _$PackToJson(Pack instance) => <String, dynamic>{
+  'ingredient_cost_eur': instance.ingredientCostEur,
+  'metadata': instance.metadata,
+  'packs': instance.count,
+};
+
+PackMetadata _$PackMetadataFromJson(Map<String, dynamic> json) =>
+    PackMetadata(title: json['title'] as String?);
+
+Map<String, dynamic> _$PackMetadataToJson(PackMetadata instance) =>
+    <String, dynamic>{'title': instance.title};

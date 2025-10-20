@@ -34,6 +34,7 @@ class AppDatabase {
           CREATE TABLE ingredients(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             recipe_id TEXT NOT NULL,
+            ingredient_id TEXT,
             name TEXT NOT NULL,
             unit TEXT,
             amount REAL,
@@ -41,13 +42,15 @@ class AppDatabase {
           )
         ''');
         await db.execute('''
-          CREATE TABLE line_items(
+          CREATE TABLE pp_ingredientitems(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             recipe_id TEXT NOT NULL,
             title TEXT NOT NULL,
             unit TEXT,
             amount REAL,
-            line_cost_eur REAL NOT NULL,
+            pack_count INTEGER,
+            ingredient_ids TEXT NOT NULL,
+            pp_ingredient_cost_eur REAL NOT NULL,
             FOREIGN KEY(recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
           )
         ''');
