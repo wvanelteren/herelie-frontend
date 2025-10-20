@@ -5,7 +5,7 @@ import 'core/di/injector.dart';
 import 'domain/repositories/recipe_repository.dart';
 import 'presentation/blocs/process_recipe/process_recipe_cubit.dart';
 import 'presentation/blocs/recipe_list/recipe_list_cubit.dart';
-import 'presentation/pages/input_recipe_page.dart';
+import 'presentation/pages/recipe_list_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,7 +53,7 @@ class RecipeApp extends StatelessWidget {
             dense: true,
           ),
         ),
-        home: const InputRecipePage(),
+        home: const RecipeListPage(),
       ),
     );
   }

@@ -6,7 +6,6 @@ import '../blocs/process_recipe/process_recipe_cubit.dart';
 import '../blocs/recipe_list/recipe_list_cubit.dart';
 import '../widgets/primary_button.dart';
 import 'parsed_recipe_page.dart';
-import 'recipe_list_page.dart';
 
 class InputRecipePage extends StatefulWidget {
   const InputRecipePage({super.key});
@@ -24,23 +23,12 @@ class _InputRecipePageState extends State<InputRecipePage> {
     super.dispose();
   }
 
-  void _toList() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RecipeListPage()));
-  }
-
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Recept verwerken'),
-        actions: [
-          IconButton(
-            tooltip: 'Alle recepten',
-            onPressed: _toList,
-            icon: const Icon(Icons.menu_book_rounded),
-          ),
-        ],
       ),
       body: Container(
         decoration: BoxDecoration(
