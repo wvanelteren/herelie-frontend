@@ -8,6 +8,13 @@ class Ingredient extends Equatable {
 
   const Ingredient({this.id, required this.name, this.amount, this.unit});
 
+  Ingredient scale(double multiplier) => Ingredient(
+    id: id,
+    name: name,
+    unit: unit,
+    amount: amount != null ? amount! * multiplier : null,
+  );
+
   @override
   List<Object?> get props => [id, amount, unit, name];
 }
