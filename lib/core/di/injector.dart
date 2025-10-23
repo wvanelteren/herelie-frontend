@@ -4,6 +4,7 @@ import '../db/app_database.dart';
 import '../network/dio_client.dart';
 import '../../data/datasources/recipe_local_data_source.dart';
 import '../../data/datasources/recipe_remote_data_source.dart';
+import '../../data/datasources/optimizer_remote_data_source.dart';
 import '../../data/repositories/recipe_repository_impl.dart';
 import '../../domain/repositories/recipe_repository.dart';
 
@@ -24,6 +25,9 @@ Future<void> setupInjector() async {
   sl.registerLazySingleton<RecipeRemoteDataSource>(
     () => RecipeRemoteDataSource(sl<Dio>()),
   );
+  sl.registerLazySingleton<OptimizerRemoteDataSource>(
+    () => OptimizerRemoteDataSource(sl<Dio>()),
+  );
   sl.registerLazySingleton<RecipeLocalDataSource>(
     () => RecipeLocalDataSource(sl<AppDatabase>()),
   );
@@ -32,6 +36,7 @@ Future<void> setupInjector() async {
   sl.registerLazySingleton<RecipeRepository>(
     () => RecipeRepositoryImpl(
       remote: sl<RecipeRemoteDataSource>(),
+      optimizerRemote: sl<OptimizerRemoteDataSource>(),
       local: sl<RecipeLocalDataSource>(),
     ),
   );

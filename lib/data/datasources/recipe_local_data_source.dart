@@ -37,8 +37,12 @@ class RecipeLocalDataSource {
           'recipe_id': recipe.id,
           'ingredient_id': ing.id,
           'name': ing.name,
-          'unit': ing.unit,
-          'amount': ing.amount,
+          'foundation_id': ing.foundationId,
+          'foundation_name': ing.foundationName,
+          'normalized_unit': ing.normalizedQuantity?.unit,
+          'normalized_amount': ing.normalizedQuantity?.amount,
+          'original_amount': ing.originalQuantity?.amount,
+          'original_unit': ing.originalQuantity?.unit,
         });
       }
 
@@ -85,8 +89,16 @@ class RecipeLocalDataSource {
         Ingredient(
           id: r['ingredient_id'] as String?,
           name: (r['name'] as String),
-          unit: r['unit'] as String?,
-          amount: (r['amount'] as num?)?.toDouble(),
+          foundationId: r['foundation_id'] as String?,
+          foundationName: r['foundation_name'] as String?,
+          normalizedQuantity: IngredientQuantity(
+            unit: r['normalized_unit'] as String?,
+            amount: (r['normalized_amount'] as num?)?.toDouble(),
+          ),
+          originalQuantity: IngredientQuantity(
+            amount: (r['original_amount'] as num?)?.toDouble(),
+            unit: r['original_unit'] as String?,
+          ),
         ),
       );
     }

@@ -36,8 +36,12 @@ class AppDatabase {
             recipe_id TEXT NOT NULL,
             ingredient_id TEXT,
             name TEXT NOT NULL,
-            unit TEXT,
-            amount REAL,
+            foundation_id TEXT,
+            foundation_name TEXT,
+            normalized_amount REAL,
+            normalized_unit TEXT,
+            original_amount REAL,
+            original_unit TEXT,
             FOREIGN KEY(recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
           )
         ''');
