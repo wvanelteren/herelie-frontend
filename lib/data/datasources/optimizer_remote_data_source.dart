@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 
 import '../../core/config/app_config.dart';
@@ -12,7 +15,7 @@ class OptimizerRemoteDataSource {
   Future<ApiOptimizerResponse> optimize(OptimizerRequest request) async {
     try {
       final res = await _dio.post(
-        AppConfig.optimizerUrl,
+        AppConfig.optimizerApiPath,
         data: request.toJson(),
         options: Options(
           headers: {
@@ -22,10 +25,27 @@ class OptimizerRemoteDataSource {
         ),
       );
       return ApiOptimizerResponse.fromJson(res.data as Map<String, dynamic>);
-    } on DioException catch (e) {
-      final msg = e.response?.data ?? e.message;
-      throw Exception('Optimizer error: $msg');
-    } catch (e) {
+    } on DioException catch (e, st) {
+      final payload = e.response?.data;
+      final message = 'Optimizer error: ${e.message}';
+
+      log(
+        payload == null
+            ? message
+            : '$message — payload: ${payload is String ? payload : jsonEncode(payload)}',
+        name: 'OptimizerRemoteDataSource',
+        error: e,
+        stackTrace: st,
+      );
+
+      throw Exception(payload ?? e.message);
+    } catch (e, st) {
+      log(
+        'Optimizer unexpected error: $e',
+        name: 'OptimizerRemoteDataSource',
+        error: e,
+        stackTrace: st,
+      );
       throw Exception('Optimizer unexpected error: $e');
     }
   }

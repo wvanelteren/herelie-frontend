@@ -2,10 +2,10 @@ import 'package:dio/dio.dart';
 import '../config/app_config.dart';
 
 class DioClient {
-  static Dio build() {
+  static Dio build({String? baseUrl}) {
     final dio = Dio(
       BaseOptions(
-        baseUrl: AppConfig.parserBaseUrl,
+        baseUrl: baseUrl ?? AppConfig.parserBaseUrl,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 20),
         sendTimeout: const Duration(seconds: 20),

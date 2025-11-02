@@ -17,9 +17,6 @@ class Ingredient extends Equatable {
     this.originalQuantity,
   });
 
-  double? get amount => normalizedQuantity?.amount;
-  String? get unit => normalizedQuantity?.unit;
-
   Ingredient scale(double multiplier) => Ingredient(
         id: id,
         name: name,

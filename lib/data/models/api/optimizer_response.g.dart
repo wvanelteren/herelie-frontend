@@ -9,8 +9,8 @@ part of 'optimizer_response.dart';
 ApiOptimizerResponse _$ApiOptimizerResponseFromJson(
   Map<String, dynamic> json,
 ) => ApiOptimizerResponse(
-  jobId: json['job_id'] as String,
-  schemaVersion: json['schema_version'] as String,
+  jobId: _stringFromJson(json['job_id']),
+  schemaVersion: _stringFromJson(json['schema_version']),
   completedAt: _dateTimeFromJson(json['completed_at'] as String?),
   result: json['result'] == null
       ? null
@@ -43,7 +43,7 @@ Map<String, dynamic> _$ApiOptimizerResultToJson(ApiOptimizerResult instance) =>
 ApiOptimizerSolution _$ApiOptimizerSolutionFromJson(
   Map<String, dynamic> json,
 ) => ApiOptimizerSolution(
-  profile: json['profile'] as String,
+  profile: _stringFromJson(json['profile']),
   totalCostEur: (json['total_cost_eur'] as num).toDouble(),
   purchasePlan: (json['purchase_plan'] as List<dynamic>)
       .map((e) => ApiOptimizerPurchasePlan.fromJson(e as Map<String, dynamic>))
@@ -61,9 +61,7 @@ Map<String, dynamic> _$ApiOptimizerSolutionToJson(
 ApiOptimizerPurchasePlan _$ApiOptimizerPurchasePlanFromJson(
   Map<String, dynamic> json,
 ) => ApiOptimizerPurchasePlan(
-  ingredientIds: (json['ingredient_ids'] as List<dynamic>)
-      .map((e) => e as String)
-      .toList(),
+  ingredientIds: _stringListFromJson(json['ingredient_ids']),
   requested: json['requested'] == null
       ? null
       : ApiOptimizerQuantity.fromJson(
@@ -74,7 +72,7 @@ ApiOptimizerPurchasePlan _$ApiOptimizerPurchasePlanFromJson(
       : ApiOptimizerQuantity.fromJson(
           json['fulfilled'] as Map<String, dynamic>,
         ),
-  status: json['status'] as String?,
+  status: _nullableStringFromJson(json['status']),
   leftover: json['leftover'] == null
       ? null
       : ApiOptimizerQuantity.fromJson(json['leftover'] as Map<String, dynamic>),
@@ -88,7 +86,7 @@ ApiOptimizerPurchasePlan _$ApiOptimizerPurchasePlanFromJson(
 Map<String, dynamic> _$ApiOptimizerPurchasePlanToJson(
   ApiOptimizerPurchasePlan instance,
 ) => <String, dynamic>{
-  'ingredient_ids': instance.ingredientIds,
+  'ingredient_ids': _stringListToJson(instance.ingredientIds),
   'requested': instance.requested?.toJson(),
   'fulfilled': instance.fulfilled?.toJson(),
   'status': instance.status,
@@ -100,7 +98,7 @@ ApiOptimizerQuantity _$ApiOptimizerQuantityFromJson(
   Map<String, dynamic> json,
 ) => ApiOptimizerQuantity(
   amount: _nullableDoubleFromJson(json['amount']),
-  unit: json['unit'] as String?,
+  unit: _nullableStringFromJson(json['unit']),
 );
 
 Map<String, dynamic> _$ApiOptimizerQuantityToJson(
@@ -112,7 +110,7 @@ Map<String, dynamic> _$ApiOptimizerQuantityToJson(
 
 ApiOptimizerPack _$ApiOptimizerPackFromJson(Map<String, dynamic> json) =>
     ApiOptimizerPack(
-      skuId: json['sku_id'] as String?,
+      skuId: _nullableStringFromJson(json['sku_id']),
       packCount: (json['pack_count'] as num?)?.toInt(),
       packSize: json['pack_size'] == null
           ? null

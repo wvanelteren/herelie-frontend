@@ -21,7 +21,12 @@ class ProductTile extends StatelessWidget {
 
   String _ingredientDisplay() {
     if (ingredient == null) return '';
-    final quantity = _formatAmountUnit(ingredient!.amount, ingredient!.unit);
+    final preferredQuantity =
+        ingredient!.originalQuantity ?? ingredient!.normalizedQuantity;
+    final quantity = _formatAmountUnit(
+      preferredQuantity?.amount,
+      preferredQuantity?.unit,
+    );
     return [
       quantity,
       ingredient!.name,

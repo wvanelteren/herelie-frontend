@@ -80,19 +80,20 @@ class RecipeRepositoryImpl implements RecipeRepository {
         .where((ingredient) =>
             ingredient.id != null &&
             ingredient.foundationId != null &&
-            ingredient.amount != null &&
-            ingredient.unit != null)
-        .map(
-          (ingredient) => OptimizerDemand(
+            ingredient.normalizedQuantity?.amount != null &&
+            ingredient.normalizedQuantity?.unit != null)
+        .map((ingredient) {
+          final normalized = ingredient.normalizedQuantity!;
+          return OptimizerDemand(
             ingredientId: ingredient.id!,
             ingredientName: ingredient.name,
             foundationId: ingredient.foundationId!,
             requested: RequestedQuantity(
-              amount: ingredient.amount!,
-              unit: ingredient.unit!,
+              amount: normalized.amount!,
+              unit: normalized.unit!,
             ),
-          ),
-        )
+          );
+        })
         .toList(growable: false);
 
     if (demands.isEmpty) return null;

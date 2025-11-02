@@ -4,9 +4,9 @@ part 'optimizer_response.g.dart';
 
 @JsonSerializable(explicitToJson: true)
 class ApiOptimizerResponse {
-  @JsonKey(name: 'job_id')
+  @JsonKey(name: 'job_id', fromJson: _stringFromJson)
   final String jobId;
-  @JsonKey(name: 'schema_version')
+  @JsonKey(name: 'schema_version', fromJson: _stringFromJson)
   final String schemaVersion;
   @JsonKey(
     name: 'completed_at',
@@ -47,6 +47,7 @@ class ApiOptimizerResult {
 
 @JsonSerializable(explicitToJson: true)
 class ApiOptimizerSolution {
+  @JsonKey(fromJson: _stringFromJson)
   final String profile;
   @JsonKey(name: 'total_cost_eur')
   final double totalCostEur;
@@ -67,10 +68,15 @@ class ApiOptimizerSolution {
 
 @JsonSerializable(explicitToJson: true)
 class ApiOptimizerPurchasePlan {
-  @JsonKey(name: 'ingredient_ids')
+  @JsonKey(
+    name: 'ingredient_ids',
+    fromJson: _stringListFromJson,
+    toJson: _stringListToJson,
+  )
   final List<String> ingredientIds;
   final ApiOptimizerQuantity? requested;
   final ApiOptimizerQuantity? fulfilled;
+  @JsonKey(fromJson: _nullableStringFromJson)
   final String? status;
   final ApiOptimizerQuantity? leftover;
   @JsonKey(defaultValue: [])
@@ -101,6 +107,7 @@ class ApiOptimizerPurchasePlan {
 class ApiOptimizerQuantity {
   @JsonKey(fromJson: _nullableDoubleFromJson, toJson: _nullableDoubleToJson)
   final double? amount;
+  @JsonKey(fromJson: _nullableStringFromJson)
   final String? unit;
 
   const ApiOptimizerQuantity({this.amount, this.unit});
@@ -113,7 +120,7 @@ class ApiOptimizerQuantity {
 
 @JsonSerializable(explicitToJson: true)
 class ApiOptimizerPack {
-  @JsonKey(name: 'sku_id')
+  @JsonKey(name: 'sku_id', fromJson: _nullableStringFromJson)
   final String? skuId;
   @JsonKey(name: 'pack_count')
   final int? packCount;
@@ -147,3 +154,19 @@ double? _nullableDoubleFromJson(Object? value) {
 }
 
 Object? _nullableDoubleToJson(double? value) => value;
+
+String _stringFromJson(Object? value) => value?.toString() ?? '';
+
+String? _nullableStringFromJson(Object? value) => value?.toString();
+
+List<String> _stringListFromJson(Object? value) {
+  if (value is List) {
+    return value
+        .where((element) => element != null)
+        .map((element) => element.toString())
+        .toList(growable: false);
+  }
+  return const [];
+}
+
+Object? _stringListToJson(List<String> value) => value;

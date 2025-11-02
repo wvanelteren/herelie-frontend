@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import '../db/app_database.dart';
+import '../config/app_config.dart';
 import '../network/dio_client.dart';
 import '../../data/datasources/recipe_local_data_source.dart';
 import '../../data/datasources/recipe_remote_data_source.dart';
@@ -26,7 +27,9 @@ Future<void> setupInjector() async {
     () => RecipeRemoteDataSource(sl<Dio>()),
   );
   sl.registerLazySingleton<OptimizerRemoteDataSource>(
-    () => OptimizerRemoteDataSource(sl<Dio>()),
+    () => OptimizerRemoteDataSource(
+      DioClient.build(baseUrl: AppConfig.optimizerBaseUrl),
+    ),
   );
   sl.registerLazySingleton<RecipeLocalDataSource>(
     () => RecipeLocalDataSource(sl<AppDatabase>()),
