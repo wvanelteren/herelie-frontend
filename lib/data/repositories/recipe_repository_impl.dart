@@ -118,6 +118,7 @@ class RecipeRepositoryImpl implements RecipeRepository {
     if (solution != null) {
       for (final plan in solution.purchasePlan) {
         if (plan.packs.isEmpty) continue;
+        // TODO: For now, base title on the first pack's sku_name
         final firstPack = plan.packs.first;
         final fallbackTitle = firstPack.skuId ??
             (plan.ingredientIds.isNotEmpty
@@ -126,7 +127,7 @@ class RecipeRepositoryImpl implements RecipeRepository {
         purchasePlan.add(
           PurchasePlanIngredient(
             title: fallbackTitle,
-            ppIngredientCostEur: plan.totalCostEur,
+            costEur: plan.totalCostEur,
             ingredientIds: plan.ingredientIds,
             amount: plan.fulfilled?.amount ?? plan.requested?.amount,
             unit: plan.fulfilled?.unit ?? plan.requested?.unit,

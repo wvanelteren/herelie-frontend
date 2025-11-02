@@ -21,11 +21,10 @@ class ProductTile extends StatelessWidget {
 
   String _ingredientDisplay() {
     if (ingredient == null) return '';
-    final preferredQuantity =
-        ingredient!.originalQuantity ?? ingredient!.normalizedQuantity;
+    final displayedQuantity =ingredient!.originalQuantity;
     final quantity = _formatAmountUnit(
-      preferredQuantity?.amount,
-      preferredQuantity?.unit,
+      displayedQuantity?.amount,
+      displayedQuantity?.unit,
     );
     return [
       quantity,
@@ -58,7 +57,7 @@ class ProductTile extends StatelessWidget {
           Row(
             children: [
               Text(
-                formatEuro(item.ppIngredientCostEur),
+                formatEuro(item.costEur),
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: theme.colorScheme.primary,

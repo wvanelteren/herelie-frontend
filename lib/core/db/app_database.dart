@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 
 class AppDatabase {
   static const _dbName = 'recipes.db';
-  static const _dbVersion = 1;
+  static const _dbVersion = 2;
 
   Database? _db;
   Database get db => _db!;
@@ -54,10 +54,17 @@ class AppDatabase {
             amount REAL,
             pack_count INTEGER,
             ingredient_ids TEXT NOT NULL,
-            pp_ingredient_cost_eur REAL NOT NULL,
+            cost_eur REAL NOT NULL,
             FOREIGN KEY(recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
           )
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(
+            'ALTER TABLE pp_ingredientitems RENAME COLUMN pp_ingredient_cost_eur TO cost_eur',
+          );
+        }
       },
     );
   }

@@ -55,7 +55,7 @@ class RecipeLocalDataSource {
           'amount': li.amount,
           'pack_count': li.packCount,
           'ingredient_ids': jsonEncode(li.ingredientIds),
-          'pp_ingredient_cost_eur': li.ppIngredientCostEur,
+          'cost_eur': li.costEur,
         });
       }
     });
@@ -118,7 +118,7 @@ class RecipeLocalDataSource {
           title: (r['title'] as String),
           unit: r['unit'] as String?,
           amount: (r['amount'] as num?)?.toDouble(),
-          ppIngredientCostEur: (r['pp_ingredient_cost_eur'] as num).toDouble(),
+          costEur: (r['cost_eur'] as num).toDouble(),
           packCount: (r['pack_count'] as num?)?.toInt(),
           ingredientIds: ingredientIds,
         ),

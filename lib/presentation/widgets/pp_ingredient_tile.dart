@@ -23,7 +23,7 @@ class PpIngredientTile extends StatelessWidget {
     return ListTile(
       title: Text(title),
       trailing: Text(
-        formatEuro(item.ppIngredientCostEur),
+        formatEuro(item.costEur),
         style: const TextStyle(fontWeight: FontWeight.w700),
       ),
       dense: true,

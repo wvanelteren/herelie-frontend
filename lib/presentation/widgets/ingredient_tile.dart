@@ -13,10 +13,9 @@ class IngredientTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final preferredQuantity =
-        ingredient.originalQuantity ?? ingredient.normalizedQuantity;
-    final amount = preferredQuantity?.amount;
-    final unit = preferredQuantity?.unit;
+    final displayedQuantity = ingredient.originalQuantity;
+    final amount = displayedQuantity?.amount;
+    final unit = displayedQuantity?.unit;
     final quantityText = [
       if (amount != null) _formatAmount(amount),
       if (unit != null && unit.isNotEmpty) unit,

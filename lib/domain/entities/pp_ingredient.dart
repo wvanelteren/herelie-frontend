@@ -5,12 +5,12 @@ class PurchasePlanIngredient extends Equatable {
   final double? amount;
   final String? unit;
   final String title;
-  final double ppIngredientCostEur;
+  final double costEur;
   final int? packCount;
 
   const PurchasePlanIngredient({
     required this.title,
-    required this.ppIngredientCostEur,
+    required this.costEur,
     required this.ingredientIds,
     this.amount,
     this.unit,
@@ -19,5 +19,5 @@ class PurchasePlanIngredient extends Equatable {
 
   @override
   List<Object?> get props =>
-      [ingredientIds, amount, unit, title, ppIngredientCostEur, packCount];
+      [ingredientIds, amount, unit, title, costEur, packCount];
 }
