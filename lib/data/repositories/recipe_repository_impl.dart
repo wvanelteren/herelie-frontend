@@ -1,6 +1,8 @@
 import '../../domain/entities/ingredient.dart';
+import '../../domain/entities/purchase_plan.dart';
 import '../../domain/entities/pp_ingredient.dart';
 import '../../domain/entities/recipe.dart';
+import '../../domain/repositories/purchase_plan_repository.dart';
 import '../../domain/repositories/recipe_repository.dart';
 import '../datasources/optimizer_remote_data_source.dart';
 import '../datasources/recipe_local_data_source.dart';
@@ -13,11 +15,13 @@ class RecipeRepositoryImpl implements RecipeRepository {
   final RecipeRemoteDataSource remote;
   final OptimizerRemoteDataSource optimizerRemote;
   final RecipeLocalDataSource local;
+  final PurchasePlanRepository purchasePlans;
 
   RecipeRepositoryImpl({
     required this.remote,
     required this.optimizerRemote,
     required this.local,
+    required this.purchasePlans,
   });
 
   @override
@@ -38,10 +42,18 @@ class RecipeRepositoryImpl implements RecipeRepository {
     final recipe = _buildRecipe(
       parser: parserResponse,
       ingredients: ingredients,
+    );
+    final purchasePlan = _buildPurchasePlan(
+      parser: parserResponse,
       optimizer: optimizerResponse,
     );
 
     await local.upsertRecipe(recipe);
+    if (purchasePlan != null) {
+      await purchasePlans.save(purchasePlan);
+    } else {
+      await purchasePlans.deleteByRecipeId(recipe.id);
+    }
     return recipe;
   }
 
@@ -108,42 +120,53 @@ class RecipeRepositoryImpl implements RecipeRepository {
   Recipe _buildRecipe({
     required ProcessResponse parser,
     required List<Ingredient> ingredients,
+  }) {
+    return Recipe(
+      id: parser.jobId,
+      title: parser.recipe.title,
+      servings: parser.recipe.servings,
+      ingredients: ingredients,
+      createdAt: DateTime.now(),
+    );
+  }
+
+  PurchasePlan? _buildPurchasePlan({
+    required ProcessResponse parser,
     ApiOptimizerResponse? optimizer,
   }) {
     final solution = optimizer?.solutions.isNotEmpty == true
         ? optimizer!.solutions.first
         : null;
 
-    final purchasePlan = <PurchasePlanIngredient>[];
-    if (solution != null) {
-      for (final plan in solution.purchasePlan) {
-        if (plan.packs.isEmpty) continue;
-        // TODO: For now, base title on the first pack's sku_name
-        final firstPack = plan.packs.first;
-        final fallbackTitle = firstPack.skuId ??
-            (plan.ingredientIds.isNotEmpty
-                ? plan.ingredientIds.first
-                : 'Onbekend product');
-        purchasePlan.add(
-          PurchasePlanIngredient(
-            title: fallbackTitle,
-            costEur: plan.totalCostEur,
-            ingredientIds: plan.ingredientIds,
-            amount: plan.fulfilled?.amount ?? plan.requested?.amount,
-            unit: plan.fulfilled?.unit ?? plan.requested?.unit,
-            packCount: plan.totalPackCount,
-          ),
-        );
-      }
+    if (solution == null) return null;
+
+    final items = <PurchasePlanIngredient>[];
+    for (final plan in solution.purchasePlan) {
+      if (plan.packs.isEmpty) continue;
+      final firstPack = plan.packs.first;
+      final fallbackTitle = firstPack.skuId ??
+          (plan.ingredientIds.isNotEmpty
+              ? plan.ingredientIds.first
+              : 'Onbekend product');
+      items.add(
+        PurchasePlanIngredient(
+          title: fallbackTitle,
+          costEur: plan.totalCostEur,
+          ingredientIds: plan.ingredientIds,
+          amount: plan.fulfilled?.amount ?? plan.requested?.amount,
+          unit: plan.fulfilled?.unit ?? plan.requested?.unit,
+          packCount: plan.totalPackCount,
+        ),
+      );
     }
 
-    return Recipe(
+    if (items.isEmpty) return null;
+
+    return PurchasePlan(
       id: parser.jobId,
-      title: parser.recipe.title,
-      servings: parser.recipe.servings,
-      totalCostEur: solution?.totalCostEur ?? 0,
-      ingredients: ingredients,
-      purchasePlanIngredients: purchasePlan,
+      recipeId: parser.jobId,
+      totalCostEur: solution.totalCostEur,
+      items: items,
       createdAt: DateTime.now(),
     );
   }

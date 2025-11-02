@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 
 class AppDatabase {
   static const _dbName = 'recipes.db';
-  static const _dbVersion = 2;
+  static const _dbVersion = 3;
 
   Database? _db;
   Database get db => _db!;
@@ -26,7 +26,6 @@ class AppDatabase {
             id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
             servings INTEGER NOT NULL,
-            total_cost REAL NOT NULL,
             created_at INTEGER NOT NULL
           )
         ''');
@@ -46,25 +45,27 @@ class AppDatabase {
           )
         ''');
         await db.execute('''
-          CREATE TABLE pp_ingredientitems(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+          CREATE TABLE purchase_plans(
+            id TEXT PRIMARY KEY,
             recipe_id TEXT NOT NULL,
+            total_cost_eur REAL NOT NULL,
+            created_at INTEGER NOT NULL,
+            FOREIGN KEY(recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE purchase_plan_items(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            purchase_plan_id TEXT NOT NULL,
             title TEXT NOT NULL,
             unit TEXT,
             amount REAL,
             pack_count INTEGER,
             ingredient_ids TEXT NOT NULL,
             cost_eur REAL NOT NULL,
-            FOREIGN KEY(recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
+            FOREIGN KEY(purchase_plan_id) REFERENCES purchase_plans(id) ON DELETE CASCADE
           )
         ''');
-      },
-      onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 2) {
-          await db.execute(
-            'ALTER TABLE pp_ingredientitems RENAME COLUMN pp_ingredient_cost_eur TO cost_eur',
-          );
-        }
       },
     );
   }

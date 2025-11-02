@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/di/injector.dart';
 import '../../core/utils/currency_format.dart';
 import '../../domain/entities/ingredient.dart';
+import '../../domain/entities/purchase_plan.dart';
 import '../../domain/entities/recipe.dart';
+import '../../domain/repositories/purchase_plan_repository.dart';
 import '../blocs/recipe_detail/recipe_detail_cubit.dart';
 import '../blocs/recipe_detail/recipe_detail_state.dart';
 import '../widgets/ingredient_tile.dart';
@@ -25,7 +28,10 @@ class _ParsedRecipePageState extends State<ParsedRecipePage> {
   @override
   void initState() {
     super.initState();
-    _cubit = RecipeDetailCubit(widget.recipe);
+    _cubit = RecipeDetailCubit(
+      recipe: widget.recipe,
+      purchasePlans: sl<PurchasePlanRepository>(),
+    );
   }
 
   @override
@@ -85,9 +91,34 @@ class _ParsedRecipePageState extends State<ParsedRecipePage> {
                       ),
                       child: Row(
                         children: [
-                          _Metric(
-                            label: 'Totale prijs',
-                            value: formatEuro(widget.recipe.totalCostEur),
+                          BlocBuilder<RecipeDetailCubit, RecipeDetailState>(
+                            buildWhen: (previous, current) =>
+                                previous.purchasePlan != current.purchasePlan ||
+                                previous.isLoadingPlan != current.isLoadingPlan ||
+                                previous.planLoadFailed != current.planLoadFailed,
+                            builder: (context, state) {
+                              final label = 'Totale prijs';
+                              if (state.isLoadingPlan) {
+                                return _Metric(
+                                  label: label,
+                                  value: 'Laden…',
+                                );
+                              }
+                              if (state.planLoadFailed) {
+                                return _Metric(
+                                  label: label,
+                                  value: 'Onbekend',
+                                  subtitle: 'Kon plan niet laden',
+                                );
+                              }
+                              final plan = state.purchasePlan;
+                              return _Metric(
+                                label: label,
+                                value: plan != null
+                                    ? formatEuro(plan.totalCostEur)
+                                    : 'Niet beschikbaar',
+                              );
+                            },
                           ),
                           const Spacer(),
                           BlocBuilder<RecipeDetailCubit, RecipeDetailState>(
@@ -161,7 +192,7 @@ class _ParsedRecipePageState extends State<ParsedRecipePage> {
                       ? CrossFadeState.showFirst
                       : CrossFadeState.showSecond,
                   firstChild: const _IngredientsList(),
-                  secondChild: _ProductsList(recipe: widget.recipe),
+                  secondChild: const _ProductsList(),
                 ),
               ),
 
@@ -219,51 +250,103 @@ class _IngredientsList extends StatelessWidget {
 }
 
 class _ProductsList extends StatelessWidget {
-  final Recipe recipe;
-  const _ProductsList({required this.recipe});
+  const _ProductsList();
 
   @override
   Widget build(BuildContext context) {
-    final ingredientLookup = {
-      for (final ing in recipe.ingredients)
-        if (ing.id != null) ing.id!: ing,
-    };
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.only(top: 8, bottom: 8),
-        child: Column(
-          children: [
-            _SectionHeader(
-              title: 'Producten',
-              count:
-                  '${recipe.purchasePlanIngredients.length} item${recipe.purchasePlanIngredients.length == 1 ? '' : 's'}',
+    return BlocBuilder<RecipeDetailCubit, RecipeDetailState>(
+      buildWhen: (previous, current) =>
+          previous.purchasePlan != current.purchasePlan ||
+          previous.isLoadingPlan != current.isLoadingPlan ||
+          previous.planLoadFailed != current.planLoadFailed ||
+          previous.recipe != current.recipe,
+      builder: (context, state) {
+        final ingredientLookup = {
+          for (final ing in state.recipe.ingredients)
+            if (ing.id != null) ing.id!: ing,
+        };
+
+        final bool loading = state.isLoadingPlan;
+        final bool failed = state.planLoadFailed;
+        final PurchasePlan? plan = state.purchasePlan;
+
+        String countLabel;
+        Widget body;
+
+        if (loading) {
+          countLabel = 'laden…';
+          body = const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        } else if (failed) {
+          countLabel = '—';
+          body = Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'We konden het aankoopplan niet laden.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: context.read<RecipeDetailCubit>().refreshPlan,
+                  child: const Text('Opnieuw proberen'),
+                ),
+              ],
             ),
-            const Divider(height: 1),
-            ListView.separated(
-              padding: EdgeInsets.zero,
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemCount: recipe.purchasePlanIngredients.length,
-              itemBuilder: (context, i) {
-                final plan = recipe.purchasePlanIngredients[i];
-                Ingredient? mappedIngredient;
-                for (final id in plan.ingredientIds) {
-                  final match = ingredientLookup[id];
-                  if (match != null) {
-                    mappedIngredient = match;
-                    break;
-                  }
+          );
+        } else if (plan == null || plan.items.isEmpty) {
+          countLabel = '0 items';
+          body = const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            child: Text(
+              'Geen aankoopplan beschikbaar voor dit recept.',
+              textAlign: TextAlign.center,
+            ),
+          );
+        } else {
+          countLabel =
+              '${plan.items.length} item${plan.items.length == 1 ? '' : 's'}';
+          body = ListView.separated(
+            padding: EdgeInsets.zero,
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            itemCount: plan.items.length,
+            itemBuilder: (context, i) {
+              final planItem = plan.items[i];
+              Ingredient? mappedIngredient;
+              for (final id in planItem.ingredientIds) {
+                final match = ingredientLookup[id];
+                if (match != null) {
+                  mappedIngredient = match;
+                  break;
                 }
-                return ProductTile(item: plan, ingredient: mappedIngredient);
-              },
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              }
+              return ProductTile(item: planItem, ingredient: mappedIngredient);
+            },
+            separatorBuilder: (_, __) => const Divider(height: 1),
+          );
+        }
+
+        return Card(
+          elevation: 0,
+          margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 8),
+            child: Column(
+              children: [
+                _SectionHeader(title: 'Producten', count: countLabel),
+                const Divider(height: 1),
+                body,
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -303,7 +386,8 @@ class _SectionHeader extends StatelessWidget {
 class _Metric extends StatelessWidget {
   final String label;
   final String value;
-  const _Metric({required this.label, required this.value});
+  final String? subtitle;
+  const _Metric({required this.label, required this.value, this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -325,6 +409,15 @@ class _Metric extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            subtitle!,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+        ],
       ],
     );
   }

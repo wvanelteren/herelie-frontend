@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/utils/currency_format.dart';
 import '../blocs/process_recipe/process_recipe_state.dart';
 import '../blocs/process_recipe/process_recipe_cubit.dart';
 import '../blocs/recipe_list/recipe_list_cubit.dart';
@@ -87,7 +86,7 @@ class _InputRecipePageState extends State<InputRecipePage> {
                     const SizedBox(height: 24),
                     if (state.status == ProcessStatus.success && state.recipe != null)
                       Text(
-                        'Laatste resultaat: ${state.recipe!.title} – ${formatEuro(state.recipe!.totalCostEur)}',
+                        'Laatste resultaat: ${state.recipe!.title}',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                   ],
