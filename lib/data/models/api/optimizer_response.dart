@@ -120,8 +120,8 @@ class ApiOptimizerQuantity {
 
 @JsonSerializable(explicitToJson: true)
 class ApiOptimizerPack {
-  @JsonKey(name: 'sku_id', fromJson: _nullableStringFromJson)
-  final String? skuId;
+  @JsonKey(name: 'sku_name', fromJson: _nullableStringFromJson)
+  final String? skuName;
   @JsonKey(name: 'pack_count')
   final int? packCount;
   @JsonKey(name: 'pack_size')
@@ -130,7 +130,7 @@ class ApiOptimizerPack {
   final double? ingredientCostEur;
 
   const ApiOptimizerPack({
-    this.skuId,
+    this.skuName,
     this.packCount,
     this.packSize,
     this.ingredientCostEur,

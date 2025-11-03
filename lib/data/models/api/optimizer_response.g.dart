@@ -110,7 +110,7 @@ Map<String, dynamic> _$ApiOptimizerQuantityToJson(
 
 ApiOptimizerPack _$ApiOptimizerPackFromJson(Map<String, dynamic> json) =>
     ApiOptimizerPack(
-      skuId: _nullableStringFromJson(json['sku_id']),
+      skuName: _nullableStringFromJson(json['sku_name']),
       packCount: (json['pack_count'] as num?)?.toInt(),
       packSize: json['pack_size'] == null
           ? null
@@ -122,7 +122,7 @@ ApiOptimizerPack _$ApiOptimizerPackFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$ApiOptimizerPackToJson(ApiOptimizerPack instance) =>
     <String, dynamic>{
-      'sku_id': instance.skuId,
+      'sku_name': instance.skuName,
       'pack_count': instance.packCount,
       'pack_size': instance.packSize?.toJson(),
       'ingredient_cost_eur': instance.ingredientCostEur,

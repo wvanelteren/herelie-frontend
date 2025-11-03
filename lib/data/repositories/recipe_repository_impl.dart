@@ -143,11 +143,9 @@ class RecipeRepositoryImpl implements RecipeRepository {
     final items = <PurchasePlanIngredient>[];
     for (final plan in solution.purchasePlan) {
       if (plan.packs.isEmpty) continue;
+      //TODO: we're just considering the first pack of products for the name.
       final firstPack = plan.packs.first;
-      final fallbackTitle = firstPack.skuId ??
-          (plan.ingredientIds.isNotEmpty
-              ? plan.ingredientIds.first
-              : 'Onbekend product');
+      final fallbackTitle = firstPack.skuName ?? 'Onbekend product';
       items.add(
         PurchasePlanIngredient(
           title: fallbackTitle,
