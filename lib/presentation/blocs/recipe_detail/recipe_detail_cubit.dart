@@ -21,11 +21,10 @@ class RecipeDetailCubit extends Cubit<RecipeDetailState> {
              recipe,
              recipe.servings > 0 ? recipe.servings : 1,
            ),
-           isLoadingPlan: true,
-           needsPlanRefresh: true,
+           isLoadingPlan: false,
          ),
        ) {
-    _primeInitialPlan();
+    _loadPlanForCurrentServings();
   }
 
   void increaseServings() {
@@ -46,18 +45,25 @@ class RecipeDetailCubit extends Cubit<RecipeDetailState> {
       state.copyWith(
         servings: servings,
         scaledIngredients: scaled,
-        isLoadingPlan: false,
         planLoadFailed: false,
-        needsPlanRefresh: true,
+        isLoadingPlan: false,
         clearPurchasePlan: true,
       ),
     );
-    _loadCachedPlanForServings(servings);
+    _loadPlanForCurrentServings();
   }
 
   Future<void> refreshPlan() => loadProductsIfNeeded(forceRefresh: true);
 
   Future<void> loadProductsIfNeeded({bool forceRefresh = false}) async {
+    await _loadPlanForCurrentServings(forceRefresh: forceRefresh);
+  }
+
+  Future<void> _loadPlanForCurrentServings({bool forceRefresh = false}) async {
+    if (state.isLoadingPlan) return;
+    if (!forceRefresh && state.purchasePlan != null && !state.planLoadFailed) {
+      return;
+    }
     final recipeId = state.recipe.id;
     final servings = state.servings;
     PurchasePlan? cached;
@@ -71,46 +77,45 @@ class RecipeDetailCubit extends Cubit<RecipeDetailState> {
           clearPurchasePlan: true,
           isLoadingPlan: false,
           planLoadFailed: true,
-          needsPlanRefresh: true,
         ),
       );
       return;
     }
 
-    if (cached != null) {
+    if (isClosed || state.servings != servings) return;
+
+    if (cached != null && !forceRefresh) {
       emit(
         state.copyWith(
           purchasePlan: cached,
           isLoadingPlan: false,
           planLoadFailed: false,
-          needsPlanRefresh: false,
         ),
       );
-      if (!forceRefresh) return;
+      return;
     }
 
+    final requestId = ++_activeRequestId;
     emit(
       state.copyWith(
+        clearPurchasePlan: true,
         isLoadingPlan: true,
         planLoadFailed: false,
-        needsPlanRefresh: false,
       ),
     );
 
     try {
-      final requestId = ++_activeRequestId;
       final plan = await _purchasePlans.generateForServings(
         recipe: state.recipe,
         servings: servings,
       );
-      if (_activeRequestId != requestId || isClosed) return;
-
+      if (_activeRequestId != requestId || isClosed || state.servings != servings) {
+        return;
+      }
       emit(
         state.copyWith(
           purchasePlan: plan,
           isLoadingPlan: false,
-          needsPlanRefresh: plan == null,
-          clearPurchasePlan: plan == null,
           planLoadFailed: false,
         ),
       );
@@ -121,88 +126,6 @@ class RecipeDetailCubit extends Cubit<RecipeDetailState> {
           clearPurchasePlan: true,
           isLoadingPlan: false,
           planLoadFailed: true,
-          needsPlanRefresh: true,
-        ),
-      );
-    }
-  }
-
-  Future<void> _primeInitialPlan() async {
-    final recipeId = state.recipe.id;
-    final servings = state.servings;
-    try {
-      final plan = await _purchasePlans.getByRecipeAndServings(
-        recipeId,
-        servings,
-      );
-      if (isClosed || state.servings != servings) return;
-      if (plan != null) {
-        emit(
-          state.copyWith(
-            purchasePlan: plan,
-            isLoadingPlan: false,
-            planLoadFailed: false,
-            needsPlanRefresh: false,
-          ),
-        );
-      } else {
-        emit(
-          state.copyWith(
-            clearPurchasePlan: true,
-            isLoadingPlan: false,
-            planLoadFailed: false,
-            needsPlanRefresh: true,
-          ),
-        );
-      }
-    } catch (_) {
-      if (isClosed) return;
-      emit(
-        state.copyWith(
-          clearPurchasePlan: true,
-          isLoadingPlan: false,
-          planLoadFailed: true,
-          needsPlanRefresh: true,
-        ),
-      );
-    }
-  }
-
-  Future<void> _loadCachedPlanForServings(int servings) async {
-    final recipeId = state.recipe.id;
-    try {
-      final plan = await _purchasePlans.getByRecipeAndServings(
-        recipeId,
-        servings,
-      );
-      if (isClosed || state.servings != servings) return;
-      if (plan != null) {
-        emit(
-          state.copyWith(
-            purchasePlan: plan,
-            isLoadingPlan: false,
-            planLoadFailed: false,
-            needsPlanRefresh: false,
-          ),
-        );
-      } else {
-        emit(
-          state.copyWith(
-            clearPurchasePlan: true,
-            isLoadingPlan: false,
-            planLoadFailed: false,
-            needsPlanRefresh: true,
-          ),
-        );
-      }
-    } catch (_) {
-      if (isClosed) return;
-      emit(
-        state.copyWith(
-          clearPurchasePlan: true,
-          isLoadingPlan: false,
-          planLoadFailed: true,
-          needsPlanRefresh: true,
         ),
       );
     }

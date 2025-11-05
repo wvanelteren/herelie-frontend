@@ -47,182 +47,158 @@ class _ParsedRecipePageState extends State<ParsedRecipePage> {
 
     return BlocProvider.value(
       value: _cubit,
-      child: BlocListener<RecipeDetailCubit, RecipeDetailState>(
-        listenWhen: (previous, current) =>
-            previous.needsPlanRefresh != current.needsPlanRefresh ||
-            previous.servings != current.servings,
-        listener: (context, state) {
-          if (_section == DetailSection.products &&
-              state.needsPlanRefresh &&
-              !state.planLoadFailed &&
-              !state.isLoadingPlan) {
-            context.read<RecipeDetailCubit>().loadProductsIfNeeded();
-          }
-        },
-        child: Scaffold(
-          appBar: AppBar(title: const Text('Recept')),
-          body: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  cs.surfaceContainerHighest,
-                  theme.scaffoldBackgroundColor,
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Recept')),
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                cs.surfaceContainerHighest,
+                theme.scaffoldBackgroundColor,
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
-            child: CustomScrollView(
-              slivers: [
-                // Title
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    child: Text(
-                      widget.recipe.title,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+          ),
+          child: CustomScrollView(
+            slivers: [
+              // Title
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: Text(
+                    widget.recipe.title,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
+              ),
 
-                // Small info card: Price + servings controls
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                    child: Card(
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+              // Small info card: Price + servings controls
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
-                        child: Row(
-                          children: [
-                            BlocBuilder<RecipeDetailCubit, RecipeDetailState>(
-                              buildWhen: (previous, current) =>
-                                  previous.purchasePlan !=
-                                      current.purchasePlan ||
-                                  previous.isLoadingPlan !=
-                                      current.isLoadingPlan ||
-                                  previous.planLoadFailed !=
-                                      current.planLoadFailed ||
-                                  previous.needsPlanRefresh !=
-                                      current.needsPlanRefresh,
-                              builder: (context, state) {
-                                final label = 'Totale prijs';
-                                if (state.planLoadFailed) {
-                                  return _Metric(
-                                    label: label,
-                                    value: 'Onbekend',
-                                    subtitle: 'Kon plan niet laden',
-                                  );
-                                }
-                                if (state.isLoadingPlan) {
-                                  return _Metric(label: label, value: 'Laden…');
-                                }
-                                if (state.needsPlanRefresh) {
-                                  return _Metric(
-                                    label: label,
-                                    value: 'Bijwerken…',
-                                  );
-                                }
-                                final plan = state.purchasePlan;
+                      child: Row(
+                        children: [
+                          BlocBuilder<RecipeDetailCubit, RecipeDetailState>(
+                            buildWhen: (previous, current) =>
+                                previous.purchasePlan != current.purchasePlan ||
+                                previous.isLoadingPlan != current.isLoadingPlan ||
+                                previous.planLoadFailed != current.planLoadFailed,
+                            builder: (context, state) {
+                              final label = 'Totale prijs';
+                              if (state.planLoadFailed) {
                                 return _Metric(
                                   label: label,
-                                  value: plan != null
-                                      ? formatEuro(plan.totalCostEur)
-                                      : 'Niet beschikbaar',
+                                  value: 'Onbekend',
+                                  subtitle: 'Kon plan niet laden',
                                 );
-                              },
-                            ),
-                            const Spacer(),
-                            BlocBuilder<RecipeDetailCubit, RecipeDetailState>(
-                              buildWhen: (previous, current) =>
-                                  previous.servings != current.servings,
-                              builder: (context, state) {
-                                return _ServingsControl(
-                                  servings: state.servings,
-                                  canDecrease: state.canDecrease,
-                                  onDecrease: context
-                                      .read<RecipeDetailCubit>()
-                                      .decreaseServings,
-                                  onIncrease: context
-                                      .read<RecipeDetailCubit>()
-                                      .increaseServings,
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Segmented toggle to swap at the same vertical position
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    child: SegmentedButton<DetailSection>(
-                      segments: const [
-                        ButtonSegment(
-                          value: DetailSection.ingredients,
-                          label: Text('Ingrediënten'),
-                          icon: Icon(Icons.list_alt_rounded),
-                        ),
-                        ButtonSegment(
-                          value: DetailSection.products,
-                          label: Text('Producten'),
-                          icon: Icon(Icons.shopping_bag_rounded),
-                        ),
-                      ],
-                      selected: {_section},
-                      showSelectedIcon: false,
-                      onSelectionChanged: (set) {
-                        final selected = set.first;
-                        setState(() => _section = selected);
-                        if (selected == DetailSection.products) {
-                          _cubit.loadProductsIfNeeded();
-                        }
-                      },
-                      style: ButtonStyle(
-                        visualDensity: VisualDensity.compact,
-                        padding: const WidgetStatePropertyAll(
-                          EdgeInsets.symmetric(horizontal: 14),
-                        ),
-                        side: WidgetStatePropertyAll(
-                          BorderSide(color: cs.outlineVariant),
-                        ),
-                        shape: WidgetStatePropertyAll(
-                          RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                              }
+                              if (state.isLoadingPlan) {
+                                return _Metric(label: label, value: 'Laden…');
+                              }
+                              final plan = state.purchasePlan;
+                              return _Metric(
+                                label: label,
+                                value: plan != null
+                                    ? formatEuro(plan.totalCostEur)
+                                    : 'Niet beschikbaar',
+                              );
+                            },
                           ),
+                          const Spacer(),
+                          BlocBuilder<RecipeDetailCubit, RecipeDetailState>(
+                            buildWhen: (previous, current) =>
+                                previous.servings != current.servings,
+                            builder: (context, state) {
+                              return _ServingsControl(
+                                servings: state.servings,
+                                canDecrease: state.canDecrease,
+                                onDecrease: context
+                                    .read<RecipeDetailCubit>()
+                                    .decreaseServings,
+                                onIncrease: context
+                                    .read<RecipeDetailCubit>()
+                                    .increaseServings,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Segmented toggle to swap at the same vertical position
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: SegmentedButton<DetailSection>(
+                    segments: const [
+                      ButtonSegment(
+                        value: DetailSection.ingredients,
+                        label: Text('Ingrediënten'),
+                        icon: Icon(Icons.list_alt_rounded),
+                      ),
+                      ButtonSegment(
+                        value: DetailSection.products,
+                        label: Text('Producten'),
+                        icon: Icon(Icons.shopping_bag_rounded),
+                      ),
+                    ],
+                    selected: {_section},
+                    showSelectedIcon: false,
+                    onSelectionChanged: (set) {
+                      final selected = set.first;
+                      setState(() => _section = selected);
+                      if (selected == DetailSection.products) {
+                        _cubit.loadProductsIfNeeded();
+                      }
+                    },
+                    style: ButtonStyle(
+                      visualDensity: VisualDensity.compact,
+                      padding: const WidgetStatePropertyAll(
+                        EdgeInsets.symmetric(horizontal: 14),
+                      ),
+                      side: WidgetStatePropertyAll(
+                        BorderSide(color: cs.outlineVariant),
+                      ),
+                      shape: WidgetStatePropertyAll(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
                     ),
                   ),
                 ),
+              ),
 
-                // Swappable content area (same vertical slot) with a soft cross-fade
-                SliverToBoxAdapter(
-                  child: AnimatedCrossFade(
-                    duration: const Duration(milliseconds: 220),
-                    crossFadeState: _section == DetailSection.ingredients
-                        ? CrossFadeState.showFirst
-                        : CrossFadeState.showSecond,
-                    firstChild: const _IngredientsList(),
-                    secondChild: const _ProductsList(),
-                  ),
+              // Swappable content area (same vertical slot) with a soft cross-fade
+              SliverToBoxAdapter(
+                child: AnimatedCrossFade(
+                  duration: const Duration(milliseconds: 220),
+                  crossFadeState: _section == DetailSection.ingredients
+                      ? CrossFadeState.showFirst
+                      : CrossFadeState.showSecond,
+                  firstChild: const _IngredientsList(),
+                  secondChild: const _ProductsList(),
                 ),
+              ),
 
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
-              ],
-            ),
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            ],
           ),
         ),
       ),
@@ -285,7 +261,6 @@ class _ProductsList extends StatelessWidget {
           previous.isLoadingPlan != current.isLoadingPlan ||
           previous.planLoadFailed != current.planLoadFailed ||
           previous.recipe != current.recipe ||
-          previous.needsPlanRefresh != current.needsPlanRefresh ||
           previous.scaledIngredients != current.scaledIngredients,
       builder: (context, state) {
         final ingredientLookup = {
@@ -295,14 +270,12 @@ class _ProductsList extends StatelessWidget {
 
         final bool loading = state.isLoadingPlan;
         final bool failed = state.planLoadFailed;
-        final bool pendingRefresh =
-            state.needsPlanRefresh && !loading && !failed;
         final PurchasePlan? plan = state.purchasePlan;
 
         String countLabel;
         Widget body;
 
-        if (loading || pendingRefresh) {
+        if (loading) {
           countLabel = 'laden…';
           body = const Padding(
             padding: EdgeInsets.symmetric(vertical: 24),
