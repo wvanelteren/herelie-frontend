@@ -10,6 +10,7 @@ class RecipeDetailState extends Equatable {
   final PurchasePlan? purchasePlan;
   final bool isLoadingPlan;
   final bool planLoadFailed;
+  final bool needsPlanRefresh;
 
   const RecipeDetailState({
     required this.recipe,
@@ -18,6 +19,7 @@ class RecipeDetailState extends Equatable {
     this.purchasePlan,
     this.isLoadingPlan = false,
     this.planLoadFailed = false,
+    this.needsPlanRefresh = false,
   });
 
   double get multiplier {
@@ -35,25 +37,27 @@ class RecipeDetailState extends Equatable {
     bool clearPurchasePlan = false,
     bool? isLoadingPlan,
     bool? planLoadFailed,
-  }) =>
-      RecipeDetailState(
-        recipe: recipe,
-        servings: servings ?? this.servings,
-        scaledIngredients: scaledIngredients ?? this.scaledIngredients,
-        purchasePlan: clearPurchasePlan
-            ? null
-            : (purchasePlan ?? this.purchasePlan),
-        isLoadingPlan: isLoadingPlan ?? this.isLoadingPlan,
-        planLoadFailed: planLoadFailed ?? this.planLoadFailed,
-      );
+    bool? needsPlanRefresh,
+  }) => RecipeDetailState(
+    recipe: recipe,
+    servings: servings ?? this.servings,
+    scaledIngredients: scaledIngredients ?? this.scaledIngredients,
+    purchasePlan: clearPurchasePlan
+        ? null
+        : (purchasePlan ?? this.purchasePlan),
+    isLoadingPlan: isLoadingPlan ?? this.isLoadingPlan,
+    planLoadFailed: planLoadFailed ?? this.planLoadFailed,
+    needsPlanRefresh: needsPlanRefresh ?? this.needsPlanRefresh,
+  );
 
   @override
   List<Object?> get props => [
-        recipe,
-        servings,
-        scaledIngredients,
-        purchasePlan,
-        isLoadingPlan,
-        planLoadFailed,
-      ];
+    recipe,
+    servings,
+    scaledIngredients,
+    purchasePlan,
+    isLoadingPlan,
+    planLoadFailed,
+    needsPlanRefresh,
+  ];
 }

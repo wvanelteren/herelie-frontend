@@ -45,17 +45,17 @@ Future<void> setupInjector() async {
   sl.registerLazySingleton<PurchasePlanRepository>(
     () => PurchasePlanRepositoryImpl(
       local: sl<PurchasePlanLocalDataSource>(),
+      optimizerRemote: sl<OptimizerRemoteDataSource>(),
     ),
   );
 
   sl.registerLazySingleton<RecipeRepository>(
     () => RecipeRepositoryImpl(
       remote: sl<RecipeRemoteDataSource>(),
-      optimizerRemote: sl<OptimizerRemoteDataSource>(),
       local: sl<RecipeLocalDataSource>(),
       purchasePlans: sl<PurchasePlanRepository>(),
     ),
   );
-  
+
   await sl.allReady();
 }

@@ -24,10 +24,14 @@ class RecipeListPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (state.status == ListStatus.failure) {
-            return Center(child: Text(state.error ?? 'Kon recepten niet laden'));
+            return Center(
+              child: Text(state.error ?? 'Kon recepten niet laden'),
+            );
           }
           if (state.recipes.isEmpty) {
-            return const Center(child: Text('Nog geen recepten. Voeg eerst een recept toe.'));
+            return const Center(
+              child: Text('Nog geen recepten. Voeg eerst een recept toe.'),
+            );
           }
           return ListView.separated(
             itemCount: state.recipes.length,
@@ -40,9 +44,9 @@ class RecipeListPage extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const InputRecipePage()),
-        ),
+        onPressed: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const InputRecipePage())),
         tooltip: 'Nieuw recept',
         child: const Icon(Icons.add),
       ),
@@ -64,8 +68,12 @@ class _RecipeListTileState extends State<_RecipeListTile> {
   @override
   void initState() {
     super.initState();
-    _planFuture =
-        sl<PurchasePlanRepository>().getByRecipeId(widget.recipe.id);
+    final recipe = widget.recipe;
+    final servings = recipe.servings > 0 ? recipe.servings : 1;
+    _planFuture = sl<PurchasePlanRepository>().getByRecipeAndServings(
+      recipe.id,
+      servings,
+    );
   }
 
   @override

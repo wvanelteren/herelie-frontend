@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 
 class AppDatabase {
   static const _dbName = 'recipes.db';
-  static const _dbVersion = 3;
+  static const _dbVersion = 4;
 
   Database? _db;
   Database get db => _db!;
@@ -20,8 +20,16 @@ class AppDatabase {
         // Zorg dat foreign keys werken.
         await db.execute('PRAGMA foreign_keys = ON');
       },
-      onCreate: (db, version) async {
-        await db.execute('''
+      onCreate: (db, version) async => _createSchema(db),
+      onUpgrade: (db, oldVersion, newVersion) async {
+        await _dropSchema(db);
+        await _createSchema(db);
+      },
+    );
+  }
+
+  Future<void> _createSchema(Database db) async {
+    await db.execute('''
           CREATE TABLE recipes(
             id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
@@ -29,7 +37,7 @@ class AppDatabase {
             created_at INTEGER NOT NULL
           )
         ''');
-        await db.execute('''
+    await db.execute('''
           CREATE TABLE ingredients(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             recipe_id TEXT NOT NULL,
@@ -44,16 +52,18 @@ class AppDatabase {
             FOREIGN KEY(recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
           )
         ''');
-        await db.execute('''
+    await db.execute('''
           CREATE TABLE purchase_plans(
             id TEXT PRIMARY KEY,
             recipe_id TEXT NOT NULL,
+            servings INTEGER NOT NULL,
             total_cost_eur REAL NOT NULL,
             created_at INTEGER NOT NULL,
+            UNIQUE(recipe_id, servings),
             FOREIGN KEY(recipe_id) REFERENCES recipes(id) ON DELETE CASCADE
           )
         ''');
-        await db.execute('''
+    await db.execute('''
           CREATE TABLE purchase_plan_items(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             purchase_plan_id TEXT NOT NULL,
@@ -66,8 +76,13 @@ class AppDatabase {
             FOREIGN KEY(purchase_plan_id) REFERENCES purchase_plans(id) ON DELETE CASCADE
           )
         ''');
-      },
-    );
+  }
+
+  Future<void> _dropSchema(Database db) async {
+    await db.execute('DROP TABLE IF EXISTS purchase_plan_items');
+    await db.execute('DROP TABLE IF EXISTS purchase_plans');
+    await db.execute('DROP TABLE IF EXISTS ingredients');
+    await db.execute('DROP TABLE IF EXISTS recipes');
   }
 
   Future<void> close() async {
