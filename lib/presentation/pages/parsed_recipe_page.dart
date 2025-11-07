@@ -89,17 +89,7 @@ class _InfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final child = state.isLoadingPlan
-        ? const _InfoSkeleton(key: ValueKey('info-skeleton'))
-        : _InfoContent(
-            key: const ValueKey('info-content'),
-            state: state,
-          );
-
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 200),
-      child: child,
-    );
+    return _InfoContent(state: state);
   }
 }
 
@@ -110,17 +100,11 @@ class _InfoContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final priceLabel = _priceLabel();
     final cubit = context.read<RecipeDetailCubit>();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          priceLabel,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        _PriceLabel(state: state),
         const SizedBox(height: 12),
         Row(
           children: [
@@ -133,6 +117,7 @@ class _InfoContent extends StatelessWidget {
             const SizedBox(width: 8),
             _ServingsButtons(
               canDecrease: state.canDecrease,
+              enabled: !state.isLoadingPlan,
               onDecrease: cubit.decreaseServings,
               onIncrease: cubit.increaseServings,
             ),
@@ -148,82 +133,57 @@ class _InfoContent extends StatelessWidget {
       ],
     );
   }
+}
 
-  String _priceLabel() {
-    if (state.planLoadFailed) return 'Onbekend';
+class _PriceLabel extends StatelessWidget {
+  final RecipeDetailState state;
+  const _PriceLabel({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.w600,
+    );
+
+    if (state.planLoadFailed) {
+      return Text('Onbekend', style: textStyle);
+    }
+
+    if (state.isLoadingPlan) {
+      final indicatorColor = theme.colorScheme.primary;
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('€', style: textStyle),
+          const SizedBox(width: 8),
+          SizedBox(
+            height: 18,
+            width: 18,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              valueColor: AlwaysStoppedAnimation(indicatorColor),
+            ),
+          ),
+        ],
+      );
+    }
+
     final plan = state.purchasePlan;
-    if (plan == null) return 'Niet beschikbaar';
-    return formatEuro(plan.totalCostEur);
-  }
-}
-
-class _InfoSkeleton extends StatelessWidget {
-  const _InfoSkeleton({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final color =
-        Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.6);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SkeletonBlock(width: 120, height: 24, color: color),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            _SkeletonBlock(
-              width: 80,
-              height: 28,
-              color: color,
-              borderRadius: 20,
-            ),
-            const SizedBox(width: 12),
-            _SkeletonBlock(
-              width: 140,
-              height: 36,
-              color: color,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _SkeletonBlock extends StatelessWidget {
-  final double width;
-  final double height;
-  final double borderRadius;
-  final Color color;
-
-  const _SkeletonBlock({
-    super.key,
-    required this.width,
-    required this.height,
-    this.borderRadius = 8,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(borderRadius),
-      ),
-    );
+    final label = plan == null ? 'Niet beschikbaar' : formatEuro(plan.totalCostEur);
+    return Text(label, style: textStyle);
   }
 }
 
 class _ServingsButtons extends StatelessWidget {
   final bool canDecrease;
+  final bool enabled;
   final VoidCallback onDecrease;
   final VoidCallback onIncrease;
 
   const _ServingsButtons({
     required this.canDecrease,
+    required this.enabled,
     required this.onDecrease,
     required this.onIncrease,
   });
@@ -240,12 +200,12 @@ class _ServingsButtons extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         TextButton(
-          onPressed: canDecrease ? onDecrease : null,
+          onPressed: enabled && canDecrease ? onDecrease : null,
           style: style(),
           child: const Text('[-]'),
         ),
         TextButton(
-          onPressed: onIncrease,
+          onPressed: enabled ? onIncrease : null,
           style: style(),
           child: const Text('[+]'),
         ),
