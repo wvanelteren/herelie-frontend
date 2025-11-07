@@ -7,6 +7,7 @@ import '../../domain/entities/recipe.dart';
 import '../../domain/repositories/purchase_plan_repository.dart';
 import '../blocs/recipe_list/recipe_list_cubit.dart';
 import '../blocs/recipe_list/recipe_list_state.dart';
+import '../blocs/shopping_list/shopping_list_cubit.dart';
 import '../style/ui_symbols.dart';
 import '../widgets/basic_scaffold.dart';
 import '../widgets/app_bottom_bar.dart';
@@ -66,30 +67,51 @@ class _RecipeListTileState extends State<_RecipeListTile> {
       builder: (context, snapshot) {
         final subtitle = _buildSubtitle(recipe, snapshot);
         final theme = Theme.of(context);
-        return TextButton(
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => ParsedRecipePage(recipe: recipe)),
-          ),
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            alignment: Alignment.centerLeft,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                recipe.title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
+        final shoppingState = context.watch<ShoppingListCubit>().state;
+        final isPending =
+            shoppingState.pendingRecipeIds.contains(recipe.id);
+        final isActive = shoppingState.containsRecipe(recipe.id);
+        final shoppingCubit = context.read<ShoppingListCubit>();
+        return Row(
+          children: [
+            Expanded(
+              child: TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ParsedRecipePage(recipe: recipe),
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  alignment: Alignment.centerLeft,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      recipe.title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: theme.textTheme.bodySmall,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: _ShoppingListToggleButton(
+                isActive: isActive,
+                isPending: isPending,
+                onPressed: () => shoppingCubit.toggleRecipe(recipe),
               ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );
@@ -108,6 +130,45 @@ class _RecipeListTileState extends State<_RecipeListTile> {
       return '$base • Geen plan';
     }
     return '$base • ${formatEuro(plan.totalCostEur)}';
+  }
+}
+
+class _ShoppingListToggleButton extends StatelessWidget {
+  final bool isActive;
+  final bool isPending;
+  final VoidCallback onPressed;
+
+  const _ShoppingListToggleButton({
+    required this.isActive,
+    required this.isPending,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final inactiveColor = theme.iconTheme.color ?? colorScheme.onSurfaceVariant;
+    if (isPending) {
+      return const SizedBox(
+        height: 32,
+        width: 32,
+        child: Padding(
+          padding: EdgeInsets.all(8),
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+    return IconButton(
+      icon: Icon(
+        isActive ? Icons.remove_circle_outline : Icons.add_circle_outline,
+        color: isActive ? colorScheme.primary : inactiveColor,
+      ),
+      tooltip: isActive
+          ? 'Verwijder uit boodschappenlijst'
+          : 'Voeg toe aan boodschappenlijst',
+      onPressed: onPressed,
+    );
   }
 }
 

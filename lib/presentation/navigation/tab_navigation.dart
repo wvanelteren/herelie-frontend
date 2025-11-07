@@ -20,6 +20,11 @@ void navigateToTab(BuildContext context, AppTab tab) {
   }
 
   Navigator.of(context).pushReplacement(
-    MaterialPageRoute(builder: (_) => destination),
+    PageRouteBuilder(
+      pageBuilder: (_, __, ___) => destination,
+      transitionDuration: Duration.zero,
+      reverseTransitionDuration: Duration.zero,
+      transitionsBuilder: (_, __, ___, child) => child,
+    ),
   );
 }

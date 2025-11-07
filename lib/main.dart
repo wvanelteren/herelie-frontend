@@ -6,6 +6,7 @@ import 'domain/repositories/purchase_plan_repository.dart';
 import 'domain/repositories/recipe_repository.dart';
 import 'presentation/blocs/process_recipe/process_recipe_cubit.dart';
 import 'presentation/blocs/recipe_list/recipe_list_cubit.dart';
+import 'presentation/blocs/shopping_list/shopping_list_cubit.dart';
 import 'presentation/pages/recipe_list_page.dart';
 
 Future<void> main() async {
@@ -29,6 +30,11 @@ class RecipeApp extends StatelessWidget {
         ),
         BlocProvider(
           create: (_) => RecipeListCubit(sl<RecipeRepository>())..load(),
+        ),
+        BlocProvider(
+          create: (_) => ShoppingListCubit(
+            purchasePlans: sl<PurchasePlanRepository>(),
+          ),
         ),
       ],
       child: MaterialApp(
