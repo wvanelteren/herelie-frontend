@@ -7,6 +7,7 @@ import '../../domain/entities/recipe.dart';
 import '../../domain/repositories/purchase_plan_repository.dart';
 import '../blocs/recipe_list/recipe_list_cubit.dart';
 import '../blocs/recipe_list/recipe_list_state.dart';
+import '../style/ui_symbols.dart';
 import '../widgets/basic_button.dart';
 import '../widgets/basic_scaffold.dart';
 import 'input_recipe_page.dart';
@@ -94,7 +95,7 @@ class _RecipeListTileState extends State<_RecipeListTile> {
   }
 
   String _buildSubtitle(Recipe recipe, AsyncSnapshot<PurchasePlan?> snapshot) {
-    final base = 'Porties: ${recipe.servings}';
+    final base = '${UiSymbols.servings} ${recipe.servings}';
     if (snapshot.connectionState == ConnectionState.waiting) {
       return '$base • Laden…';
     }
@@ -105,7 +106,7 @@ class _RecipeListTileState extends State<_RecipeListTile> {
     if (plan == null) {
       return '$base • Geen plan';
     }
-    return '$base • Totaal: ${formatEuro(plan.totalCostEur)}';
+    return '$base • ${formatEuro(plan.totalCostEur)}';
   }
 }
 

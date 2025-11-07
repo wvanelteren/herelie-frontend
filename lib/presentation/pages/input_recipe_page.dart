@@ -54,9 +54,6 @@ class _InputRecipePageState extends State<InputRecipePage> {
                   controller: _controller,
                   minLines: 10,
                   maxLines: 20,
-                  decoration: const InputDecoration(
-                    hintText: 'Plak je recept-tekst hier…',
-                  ),
                   textInputAction: TextInputAction.newline,
                 ),
               ),

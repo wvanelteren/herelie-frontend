@@ -10,6 +10,7 @@ import '../../domain/entities/recipe.dart';
 import '../../domain/repositories/purchase_plan_repository.dart';
 import '../blocs/recipe_detail/recipe_detail_cubit.dart';
 import '../blocs/recipe_detail/recipe_detail_state.dart';
+import '../style/ui_symbols.dart';
 import '../widgets/basic_scaffold.dart';
 import '../widgets/ingredient_tile.dart';
 import '../widgets/product_tile.dart';
@@ -88,22 +89,52 @@ class _InfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final child = state.isLoadingPlan
+        ? const _InfoSkeleton(key: ValueKey('info-skeleton'))
+        : _InfoContent(
+            key: const ValueKey('info-content'),
+            state: state,
+          );
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      child: child,
+    );
+  }
+}
+
+class _InfoContent extends StatelessWidget {
+  final RecipeDetailState state;
+  const _InfoContent({super.key, required this.state});
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final priceLabel = _priceLabel();
+    final cubit = context.read<RecipeDetailCubit>();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionTitle('Info'),
-        const SizedBox(height: 8),
-        Text('Totale prijs: $priceLabel'),
+        Text(
+          priceLabel,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
         Row(
           children: [
-            Text('Porties: ${state.servings}'),
+            Text(
+              '${UiSymbols.servings} ${state.servings}',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(width: 8),
             _ServingsButtons(
               canDecrease: state.canDecrease,
-              onDecrease: context.read<RecipeDetailCubit>().decreaseServings,
-              onIncrease: context.read<RecipeDetailCubit>().increaseServings,
+              onDecrease: cubit.decreaseServings,
+              onIncrease: cubit.increaseServings,
             ),
           ],
         ),
@@ -120,10 +151,69 @@ class _InfoSection extends StatelessWidget {
 
   String _priceLabel() {
     if (state.planLoadFailed) return 'Onbekend';
-    if (state.isLoadingPlan) return 'Laden…';
     final plan = state.purchasePlan;
     if (plan == null) return 'Niet beschikbaar';
     return formatEuro(plan.totalCostEur);
+  }
+}
+
+class _InfoSkeleton extends StatelessWidget {
+  const _InfoSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final color =
+        Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.6);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SkeletonBlock(width: 120, height: 24, color: color),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            _SkeletonBlock(
+              width: 80,
+              height: 28,
+              color: color,
+              borderRadius: 20,
+            ),
+            const SizedBox(width: 12),
+            _SkeletonBlock(
+              width: 140,
+              height: 36,
+              color: color,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _SkeletonBlock extends StatelessWidget {
+  final double width;
+  final double height;
+  final double borderRadius;
+  final Color color;
+
+  const _SkeletonBlock({
+    super.key,
+    required this.width,
+    required this.height,
+    this.borderRadius = 8,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(borderRadius),
+      ),
+    );
   }
 }
 
