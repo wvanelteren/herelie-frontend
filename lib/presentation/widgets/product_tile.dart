@@ -22,11 +22,14 @@ class ProductTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final amountUnit = _formatAmountUnit(item.amount, item.unit);
     final packCount = item.packCount;
     final showPackCount = packCount != null && packCount > 0;
     final packCountText = showPackCount ? '${packCount}x' : null;
     final priceText = formatEuro(item.costEur);
+    final normalizedAmount = showPackCount && item.amount != null
+        ? item.amount! / packCount!
+        : item.amount;
+    final amountUnit = _formatAmountUnit(normalizedAmount, item.unit);
 
     final leadingParts = <String>[
       if (packCountText != null) packCountText,
