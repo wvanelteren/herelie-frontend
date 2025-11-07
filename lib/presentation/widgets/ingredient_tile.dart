@@ -25,10 +25,12 @@ class IngredientTile extends StatelessWidget {
       ingredient.name,
     ].join(' ').trim();
 
-    return ListTile(
-      title: Text(title),
-      dense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.bodyMedium,
+      ),
     );
   }
 }

@@ -7,49 +7,29 @@ import '../../domain/entities/recipe.dart';
 import '../../domain/repositories/purchase_plan_repository.dart';
 import '../blocs/recipe_list/recipe_list_cubit.dart';
 import '../blocs/recipe_list/recipe_list_state.dart';
-import 'parsed_recipe_page.dart';
+import '../widgets/basic_button.dart';
+import '../widgets/basic_scaffold.dart';
 import 'input_recipe_page.dart';
+import 'parsed_recipe_page.dart';
 
 class RecipeListPage extends StatelessWidget {
   const RecipeListPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Mijn Recepten')),
-      body: BlocBuilder<RecipeListCubit, RecipeListState>(
-        buildWhen: (p, n) => p.status != n.status || p.recipes != n.recipes,
-        builder: (context, state) {
-          if (state.status == ListStatus.loading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state.status == ListStatus.failure) {
-            return Center(
-              child: Text(state.error ?? 'Kon recepten niet laden'),
-            );
-          }
-          if (state.recipes.isEmpty) {
-            return const Center(
-              child: Text('Nog geen recepten. Voeg eerst een recept toe.'),
-            );
-          }
-          return ListView.separated(
-            itemCount: state.recipes.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, i) {
-              final r = state.recipes[i];
-              return _RecipeListTile(recipe: r);
-            },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (_) => const InputRecipePage())),
-        tooltip: 'Nieuw recept',
-        child: const Icon(Icons.add),
-      ),
+    return BlocBuilder<RecipeListCubit, RecipeListState>(
+      buildWhen: (p, n) => p.status != n.status || p.recipes != n.recipes,
+      builder: (context, state) {
+        return BasicScaffold(
+          bottomArea: BasicButton(
+            label: 'Nieuw recept',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const InputRecipePage()),
+            ),
+          ),
+          child: _RecipeListBody(state: state),
+        );
+      },
     );
   }
 }
@@ -83,12 +63,30 @@ class _RecipeListTileState extends State<_RecipeListTile> {
       future: _planFuture,
       builder: (context, snapshot) {
         final subtitle = _buildSubtitle(recipe, snapshot);
-        return ListTile(
-          title: Text(recipe.title),
-          subtitle: Text(subtitle),
-          trailing: const Icon(Icons.chevron_right_rounded),
-          onTap: () => Navigator.of(context).push(
+        final theme = Theme.of(context);
+        return TextButton(
+          onPressed: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => ParsedRecipePage(recipe: recipe)),
+          ),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            alignment: Alignment.centerLeft,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                recipe.title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodySmall,
+              ),
+            ],
           ),
         );
       },
@@ -108,5 +106,35 @@ class _RecipeListTileState extends State<_RecipeListTile> {
       return '$base • Geen plan';
     }
     return '$base • Totaal: ${formatEuro(plan.totalCostEur)}';
+  }
+}
+
+class _RecipeListBody extends StatelessWidget {
+  final RecipeListState state;
+  const _RecipeListBody({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    if (state.status == ListStatus.loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (state.status == ListStatus.failure) {
+      return Center(
+        child: Text(state.error ?? 'Kon recepten niet laden'),
+      );
+    }
+    if (state.recipes.isEmpty) {
+      return const Center(
+        child: Text('Nog geen recepten. Voeg eerst een recept toe.'),
+      );
+    }
+    return ListView.separated(
+      itemCount: state.recipes.length,
+      separatorBuilder: (_, __) => const Divider(height: 1),
+      itemBuilder: (context, i) {
+        final recipe = state.recipes[i];
+        return _RecipeListTile(recipe: recipe);
+      },
+    );
   }
 }

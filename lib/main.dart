@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'core/di/injector.dart';
+import 'core/theme/app_theme.dart';
 import 'domain/repositories/purchase_plan_repository.dart';
 import 'domain/repositories/recipe_repository.dart';
 import 'presentation/blocs/process_recipe/process_recipe_cubit.dart';
@@ -19,12 +19,6 @@ class RecipeApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Mint‑green, soft surfaces, Poppins typography
-    const mintSeed = Color(0xFF6FCF97);
-    const softBg = Color(0xFFF2F7F4);
-
-    final base = ThemeData(useMaterial3: true, colorSchemeSeed: mintSeed);
-
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -40,26 +34,7 @@ class RecipeApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Recepten',
-        theme: base.copyWith(
-          scaffoldBackgroundColor: softBg,
-          textTheme: GoogleFonts.poppinsTextTheme(base.textTheme),
-          cardTheme: CardThemeData(
-            color: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            elevation: 0,
-          ),
-          appBarTheme: base.appBarTheme.copyWith(
-            elevation: 0,
-            centerTitle: false,
-            backgroundColor: Colors.transparent,
-          ),
-          listTileTheme: const ListTileThemeData(
-            contentPadding: EdgeInsets.symmetric(horizontal: 16),
-            dense: true,
-          ),
-        ),
+        theme: AppTheme.basic(),
         home: const RecipeListPage(),
       ),
     );

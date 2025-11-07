@@ -20,14 +20,26 @@ class PpIngredientTile extends StatelessWidget {
       item.title,
     ].join(' ').trim();
 
-    return ListTile(
-      title: Text(title),
-      trailing: Text(
-        formatEuro(item.costEur),
-        style: const TextStyle(fontWeight: FontWeight.w700),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            formatEuro(item.costEur),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ],
       ),
-      dense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
     );
   }
 }

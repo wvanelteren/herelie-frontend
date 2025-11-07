@@ -19,81 +19,28 @@ class ProductTile extends StatelessWidget {
     return [numStr, u].where((s) => s.isNotEmpty).join(' ').trim();
   }
 
-  String _ingredientDisplay() {
-    if (ingredient == null) return '';
-    final displayedQuantity =ingredient!.originalQuantity;
-    final quantity = _formatAmountUnit(
-      displayedQuantity?.amount,
-      displayedQuantity?.unit,
-    );
-    return [
-      quantity,
-      ingredient!.name,
-    ].where((s) => s.isNotEmpty).join(' ').trim();
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final amountUnit = _formatAmountUnit(item.amount, item.unit);
-    final ingredientDescription = _ingredientDisplay();
     final packCount = item.packCount;
     final showPackCount = packCount != null && packCount > 0;
+    final packCountText = showPackCount ? '${packCount}x' : null;
+    final priceText = formatEuro(item.costEur);
+
+    final leadingParts = <String>[
+      if (packCountText != null) packCountText,
+      if (amountUnit.isNotEmpty) amountUnit,
+      item.title,
+    ];
+    final leadText = leadingParts.where((part) => part.isNotEmpty).join(' ').trim();
+    final displayText = leadText.isNotEmpty ? '$leadText - $priceText' : priceText;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title (brand + product name)
-          Text(
-            item.title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 6),
-          // Price + amount/unit on one row
-          Row(
-            children: [
-              Text(
-                formatEuro(item.costEur),
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-              if (amountUnit.isNotEmpty) ...[
-                const SizedBox(width: 12),
-                Text(
-                  amountUnit,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-              if (showPackCount) ...[
-                const Spacer(),
-                Text(
-                  'x$packCount',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ],
-          ),
-          if (ingredientDescription.isNotEmpty || amountUnit.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              'voor ${ingredientDescription.isNotEmpty ? ingredientDescription : amountUnit}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ],
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Text(
+        displayText,
+        style: theme.textTheme.bodyMedium,
       ),
     );
   }

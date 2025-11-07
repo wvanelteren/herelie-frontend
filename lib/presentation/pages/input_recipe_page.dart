@@ -3,7 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/process_recipe/process_recipe_state.dart';
 import '../blocs/process_recipe/process_recipe_cubit.dart';
 import '../blocs/recipe_list/recipe_list_cubit.dart';
-import '../widgets/primary_button.dart';
+import '../widgets/basic_button.dart';
+import '../widgets/basic_scaffold.dart';
 import 'parsed_recipe_page.dart';
 
 class InputRecipePage extends StatefulWidget {
@@ -24,78 +25,51 @@ class _InputRecipePageState extends State<InputRecipePage> {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Recept verwerken'),
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [color.surfaceContainerHighest, color.surface],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
-          child: BlocConsumer<ProcessRecipeCubit, ProcessRecipeState>(
-            listenWhen: (prev, next) => prev.status != next.status,
-            listener: (context, state) {
-              if (state.status == ProcessStatus.failure) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.error ?? 'Er ging iets mis')),
-                );
-              }
-              if (state.status == ProcessStatus.success && state.recipe != null) {
-                context.read<RecipeListCubit>().load();
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => ParsedRecipePage(recipe: state.recipe!)),
-                );
-              }
+    return BlocConsumer<ProcessRecipeCubit, ProcessRecipeState>(
+      listenWhen: (prev, next) => prev.status != next.status,
+      listener: (context, state) {
+        if (state.status == ProcessStatus.success && state.recipe != null) {
+          context.read<RecipeListCubit>().load();
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => ParsedRecipePage(recipe: state.recipe!)),
+          );
+        }
+      },
+      builder: (context, state) {
+        final theme = Theme.of(context);
+        return BasicScaffold(
+          bottomArea: BasicButton(
+            label: 'Verwerken',
+            loading: state.status == ProcessStatus.loading,
+            onPressed: () {
+              FocusScope.of(context).unfocus();
+              context.read<ProcessRecipeCubit>().process(_controller.text);
             },
-            builder: (context, state) {
-              return Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Card(
-                      elevation: 0,
-                      clipBehavior: Clip.antiAlias,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      child: TextField(
-                        controller: _controller,
-                        minLines: 10,
-                        maxLines: 20,
-                        decoration: const InputDecoration(
-                          hintText: 'Plak je recept‑tekst hier…',
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.all(16),
-                        ),
-                        textInputAction: TextInputAction.newline,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    PrimaryButton(
-                      label: 'Verwerken',
-                      loading: state.status == ProcessStatus.loading,
-                      onPressed: () {
-                        FocusScope.of(context).unfocus();
-                        context.read<ProcessRecipeCubit>().process(_controller.text);
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    if (state.status == ProcessStatus.success && state.recipe != null)
-                      Text(
-                        'Laatste resultaat: ${state.recipe!.title}',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                  ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  minLines: 10,
+                  maxLines: 20,
+                  decoration: const InputDecoration(
+                    hintText: 'Plak je recept-tekst hier…',
+                  ),
+                  textInputAction: TextInputAction.newline,
                 ),
-              );
-            },
+              ),
+              const SizedBox(height: 16),
+              if (state.status == ProcessStatus.success && state.recipe != null)
+                Text(
+                  'Laatste resultaat: ${state.recipe!.title}',
+                  style: theme.textTheme.bodyMedium,
+                ),
+            ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
