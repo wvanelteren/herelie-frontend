@@ -27,7 +27,7 @@ class ProductTile extends StatelessWidget {
     final packCountText = showPackCount ? '${packCount}x' : null;
     final priceText = formatEuro(item.costEur);
     final normalizedAmount = showPackCount && item.amount != null
-        ? item.amount! / packCount!
+        ? item.amount! / packCount
         : item.amount;
     final amountUnit = _formatAmountUnit(normalizedAmount, item.unit);
 

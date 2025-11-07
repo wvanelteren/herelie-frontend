@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/process_recipe/process_recipe_state.dart';
 import '../blocs/process_recipe/process_recipe_cubit.dart';
 import '../blocs/recipe_list/recipe_list_cubit.dart';
+import '../navigation/tab_navigation.dart';
+import '../widgets/app_bottom_bar.dart';
 import '../widgets/basic_button.dart';
 import '../widgets/basic_scaffold.dart';
 import 'parsed_recipe_page.dart';
@@ -38,6 +40,13 @@ class _InputRecipePageState extends State<InputRecipePage> {
       builder: (context, state) {
         final theme = Theme.of(context);
         return BasicScaffold(
+          bottomNavigationBar: AppBottomBar(
+            currentTab: AppTab.input,
+            onTabSelected: (tab) {
+              if (tab == AppTab.input) return;
+              navigateToTab(context, tab);
+            },
+          ),
           bottomArea: BasicButton(
             label: 'Verwerken',
             loading: state.status == ProcessStatus.loading,

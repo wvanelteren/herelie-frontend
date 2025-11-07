@@ -8,9 +8,9 @@ import '../../domain/repositories/purchase_plan_repository.dart';
 import '../blocs/recipe_list/recipe_list_cubit.dart';
 import '../blocs/recipe_list/recipe_list_state.dart';
 import '../style/ui_symbols.dart';
-import '../widgets/basic_button.dart';
 import '../widgets/basic_scaffold.dart';
-import 'input_recipe_page.dart';
+import '../widgets/app_bottom_bar.dart';
+import '../navigation/tab_navigation.dart';
 import 'parsed_recipe_page.dart';
 
 class RecipeListPage extends StatelessWidget {
@@ -22,11 +22,12 @@ class RecipeListPage extends StatelessWidget {
       buildWhen: (p, n) => p.status != n.status || p.recipes != n.recipes,
       builder: (context, state) {
         return BasicScaffold(
-          bottomArea: BasicButton(
-            label: 'Nieuw recept',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const InputRecipePage()),
-            ),
+          bottomNavigationBar: AppBottomBar(
+            currentTab: AppTab.recipes,
+            onTabSelected: (tab) {
+              if (tab == AppTab.recipes) return;
+              navigateToTab(context, tab);
+            },
           ),
           child: _RecipeListBody(state: state),
         );
