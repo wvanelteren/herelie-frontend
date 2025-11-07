@@ -1,16 +1,23 @@
 import 'package:equatable/equatable.dart';
 import '../../../domain/entities/ingredient.dart';
+import '../../../domain/entities/purchase_plan.dart';
 import '../../../domain/entities/recipe.dart';
 
 class RecipeDetailState extends Equatable {
   final Recipe recipe;
   final int servings;
   final List<Ingredient> scaledIngredients;
+  final PurchasePlan? purchasePlan;
+  final bool isLoadingPlan;
+  final bool planLoadFailed;
 
   const RecipeDetailState({
     required this.recipe,
     required this.servings,
     required this.scaledIngredients,
+    this.purchasePlan,
+    this.isLoadingPlan = false,
+    this.planLoadFailed = false,
   });
 
   double get multiplier {
@@ -24,12 +31,28 @@ class RecipeDetailState extends Equatable {
   RecipeDetailState copyWith({
     int? servings,
     List<Ingredient>? scaledIngredients,
+    PurchasePlan? purchasePlan,
+    bool clearPurchasePlan = false,
+    bool? isLoadingPlan,
+    bool? planLoadFailed,
   }) => RecipeDetailState(
     recipe: recipe,
     servings: servings ?? this.servings,
     scaledIngredients: scaledIngredients ?? this.scaledIngredients,
+    purchasePlan: clearPurchasePlan
+        ? null
+        : (purchasePlan ?? this.purchasePlan),
+    isLoadingPlan: isLoadingPlan ?? this.isLoadingPlan,
+    planLoadFailed: planLoadFailed ?? this.planLoadFailed,
   );
 
   @override
-  List<Object?> get props => [recipe, servings, scaledIngredients];
+  List<Object?> get props => [
+    recipe,
+    servings,
+    scaledIngredients,
+    purchasePlan,
+    isLoadingPlan,
+    planLoadFailed,
+  ];
 }

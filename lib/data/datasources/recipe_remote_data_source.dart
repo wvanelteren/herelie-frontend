@@ -9,7 +9,7 @@ class RecipeRemoteDataSource {
   Future<ProcessResponse> processText(String text) async {
     try {
       final res = await _dio.post(
-        AppConfig.processPath,
+        AppConfig.parserApiPath,
         data: {'text': text},
       );
       return ProcessResponse.fromJson(res.data as Map<String, dynamic>);
