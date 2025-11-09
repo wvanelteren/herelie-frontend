@@ -1,40 +1,52 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../domain/entities/purchase_plan.dart';
+import '../../../domain/entities/recipe.dart';
 
 class ShoppingListState extends Equatable {
-  final List<PurchasePlan> plans;
+  static const Object _sentinel = Object();
+  final Map<String, Recipe> selectedRecipes;
   final Set<String> pendingRecipeIds;
-  final Map<String, String> recipeTitles;
+  final PurchasePlan? combinedPlan;
+  final bool isGenerating;
   final String? error;
 
   const ShoppingListState({
-    this.plans = const [],
+    this.selectedRecipes = const <String, Recipe>{},
     this.pendingRecipeIds = const <String>{},
-    this.recipeTitles = const <String, String>{},
+    this.combinedPlan,
+    this.isGenerating = false,
     this.error,
   });
 
   ShoppingListState copyWith({
-    List<PurchasePlan>? plans,
+    Map<String, Recipe>? selectedRecipes,
     Set<String>? pendingRecipeIds,
-    Map<String, String>? recipeTitles,
-    String? error,
+    Object? combinedPlan = _sentinel,
+    bool? isGenerating,
+    Object? error = _sentinel,
   }) {
     return ShoppingListState(
-      plans: plans ?? this.plans,
+      selectedRecipes: selectedRecipes ?? this.selectedRecipes,
       pendingRecipeIds: pendingRecipeIds ?? this.pendingRecipeIds,
-      recipeTitles: recipeTitles ?? this.recipeTitles,
-      error: error,
+      combinedPlan: identical(combinedPlan, _sentinel)
+          ? this.combinedPlan
+          : combinedPlan as PurchasePlan?,
+      isGenerating: isGenerating ?? this.isGenerating,
+      error: identical(error, _sentinel) ? this.error : error as String?,
     );
   }
 
-  bool containsRecipe(String recipeId) =>
-      plans.any((plan) => plan.recipeId == recipeId);
+  bool isSelected(String recipeId) => selectedRecipes.containsKey(recipeId);
 
-  String recipeTitle(String recipeId) =>
-      recipeTitles[recipeId] ?? 'Recept';
+  bool get hasSelection => selectedRecipes.isNotEmpty;
 
   @override
-  List<Object?> get props => [plans, pendingRecipeIds, recipeTitles, error];
+  List<Object?> get props => [
+    selectedRecipes,
+    pendingRecipeIds,
+    combinedPlan,
+    isGenerating,
+    error,
+  ];
 }

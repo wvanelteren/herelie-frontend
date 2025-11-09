@@ -1,6 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../domain/entities/purchase_plan.dart';
 import '../../../domain/entities/recipe.dart';
 import '../../../domain/repositories/purchase_plan_repository.dart';
 import 'shopping_list_state.dart';
@@ -9,36 +8,31 @@ class ShoppingListCubit extends Cubit<ShoppingListState> {
   final PurchasePlanRepository purchasePlans;
 
   ShoppingListCubit({required this.purchasePlans})
-      : super(const ShoppingListState());
+    : super(const ShoppingListState());
 
-  Future<void> addRecipe(Recipe recipe) async {
+  Future<void> toggleRecipe(Recipe recipe) async {
     final recipeId = recipe.id;
-    if (state.pendingRecipeIds.contains(recipeId) ||
-        state.containsRecipe(recipeId)) {
-      return;
-    }
+    if (state.pendingRecipeIds.contains(recipeId)) return;
 
     _setPending(recipeId, true);
     try {
-      final plan = await _loadPlanForRecipe(recipe);
-      if (plan != null) {
-        final updatedPlans = List<PurchasePlan>.from(state.plans)..add(plan);
-        emit(
-          state.copyWith(
-            plans: updatedPlans,
-            pendingRecipeIds: _updatedPending(recipeId, add: false),
-            recipeTitles: _updatedTitles(recipeId, recipe.title),
-            error: null,
-          ),
-        );
+      final updatedSelections = Map<String, Recipe>.from(state.selectedRecipes);
+      if (updatedSelections.containsKey(recipeId)) {
+        updatedSelections.remove(recipeId);
       } else {
-        emit(
-          state.copyWith(
-            pendingRecipeIds: _updatedPending(recipeId, add: false),
-            error: 'Geen aankoopplan beschikbaar voor dit recept.',
-          ),
-        );
+        updatedSelections[recipeId] = recipe;
       }
+
+      await purchasePlans.deleteShoppingListPlan();
+
+      emit(
+        state.copyWith(
+          selectedRecipes: updatedSelections,
+          pendingRecipeIds: _updatedPending(recipeId, add: false),
+          combinedPlan: null,
+          error: null,
+        ),
+      );
     } catch (e) {
       emit(
         state.copyWith(
@@ -49,49 +43,50 @@ class ShoppingListCubit extends Cubit<ShoppingListState> {
     }
   }
 
-  Future<void> removeRecipe(String recipeId) async {
-    if (state.pendingRecipeIds.contains(recipeId)) return;
-    if (!state.containsRecipe(recipeId)) return;
-
-    final updatedPlans =
-        state.plans.where((plan) => plan.recipeId != recipeId).toList();
-    emit(
-      state.copyWith(
-        plans: updatedPlans,
-        recipeTitles: _removeTitle(recipeId),
-        error: null,
-      ),
-    );
+  Future<void> removeRecipeById(String recipeId) async {
+    final recipe = state.selectedRecipes[recipeId];
+    if (recipe == null) return;
+    await toggleRecipe(recipe);
   }
 
-  Future<void> toggleRecipe(Recipe recipe) async {
-    if (state.containsRecipe(recipe.id)) {
-      await removeRecipe(recipe.id);
-    } else {
-      await addRecipe(recipe);
+  Future<void> generateCombinedPlan({bool force = false}) async {
+    if (state.selectedRecipes.isEmpty) {
+      await purchasePlans.deleteShoppingListPlan();
+      emit(
+        state.copyWith(combinedPlan: null, isGenerating: false, error: null),
+      );
+      return;
+    }
+
+    if (state.isGenerating) return;
+    if (!force && state.combinedPlan != null) return;
+
+    emit(state.copyWith(isGenerating: true, error: null));
+    try {
+      final recipes = state.selectedRecipes.values.toList(growable: false);
+      final plan = await purchasePlans.generateCombinedPlan(recipes: recipes);
+      emit(
+        state.copyWith(
+          combinedPlan: plan,
+          isGenerating: false,
+          error: plan == null
+              ? 'Geen aankoopplan beschikbaar voor deze selectie.'
+              : null,
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(isGenerating: false, error: e.toString()));
     }
   }
 
   Future<void> clear() async {
+    await purchasePlans.deleteShoppingListPlan();
     emit(const ShoppingListState());
-  }
-
-  Future<PurchasePlan?> _loadPlanForRecipe(Recipe recipe) async {
-    final servings = recipe.servings > 0 ? recipe.servings : 1;
-    final existing =
-        await purchasePlans.getByRecipeAndServings(recipe.id, servings);
-    if (existing != null) return existing;
-    return purchasePlans.generateForServings(
-      recipe: recipe,
-      servings: servings,
-    );
   }
 
   void _setPending(String recipeId, bool pending) {
     emit(
-      state.copyWith(
-        pendingRecipeIds: _updatedPending(recipeId, add: pending),
-      ),
+      state.copyWith(pendingRecipeIds: _updatedPending(recipeId, add: pending)),
     );
   }
 
@@ -102,19 +97,6 @@ class ShoppingListCubit extends Cubit<ShoppingListState> {
     } else {
       updated.remove(recipeId);
     }
-    return updated;
-  }
-
-  Map<String, String> _updatedTitles(String recipeId, String recipeTitle) {
-    final updated = Map<String, String>.from(state.recipeTitles);
-    updated[recipeId] = recipeTitle;
-    return updated;
-  }
-
-  Map<String, String> _removeTitle(String recipeId) {
-    if (!state.recipeTitles.containsKey(recipeId)) return state.recipeTitles;
-    final updated = Map<String, String>.from(state.recipeTitles);
-    updated.remove(recipeId);
     return updated;
   }
 }

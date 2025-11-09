@@ -4,6 +4,7 @@ import '../db/app_database.dart';
 import '../config/app_config.dart';
 import '../network/dio_client.dart';
 import '../../data/datasources/purchase_plan_local_data_source.dart';
+import '../../data/datasources/shopping_list_plan_local_data_source.dart';
 import '../../data/datasources/recipe_local_data_source.dart';
 import '../../data/datasources/recipe_remote_data_source.dart';
 import '../../data/datasources/optimizer_remote_data_source.dart';
@@ -40,11 +41,15 @@ Future<void> setupInjector() async {
   sl.registerLazySingleton<PurchasePlanLocalDataSource>(
     () => PurchasePlanLocalDataSource(sl<AppDatabase>()),
   );
+  sl.registerLazySingleton<ShoppingListPlanLocalDataSource>(
+    () => ShoppingListPlanLocalDataSource(sl<AppDatabase>()),
+  );
 
   // Repository
   sl.registerLazySingleton<PurchasePlanRepository>(
     () => PurchasePlanRepositoryImpl(
       local: sl<PurchasePlanLocalDataSource>(),
+      shoppingListLocal: sl<ShoppingListPlanLocalDataSource>(),
       optimizerRemote: sl<OptimizerRemoteDataSource>(),
     ),
   );

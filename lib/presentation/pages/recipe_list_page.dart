@@ -68,9 +68,8 @@ class _RecipeListTileState extends State<_RecipeListTile> {
         final subtitle = _buildSubtitle(recipe, snapshot);
         final theme = Theme.of(context);
         final shoppingState = context.watch<ShoppingListCubit>().state;
-        final isPending =
-            shoppingState.pendingRecipeIds.contains(recipe.id);
-        final isActive = shoppingState.containsRecipe(recipe.id);
+        final isPending = shoppingState.pendingRecipeIds.contains(recipe.id);
+        final isActive = shoppingState.isSelected(recipe.id);
         final shoppingCubit = context.read<ShoppingListCubit>();
         return Row(
           children: [
@@ -95,10 +94,7 @@ class _RecipeListTileState extends State<_RecipeListTile> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall,
-                    ),
+                    Text(subtitle, style: theme.textTheme.bodySmall),
                   ],
                 ),
               ),
@@ -182,9 +178,7 @@ class _RecipeListBody extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
     if (state.status == ListStatus.failure) {
-      return Center(
-        child: Text(state.error ?? 'Kon recepten niet laden'),
-      );
+      return Center(child: Text(state.error ?? 'Kon recepten niet laden'));
     }
     if (state.recipes.isEmpty) {
       return const Center(

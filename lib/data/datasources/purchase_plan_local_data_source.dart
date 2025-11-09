@@ -73,42 +73,20 @@ class PurchasePlanLocalDataSource {
       limit: 1,
     );
     if (planRows.isEmpty) return null;
+    return _mapPlanFromRow(db, planRows.first);
+  }
 
-    final planRow = planRows.first;
-    final planId = planRow['id'] as String;
-    final itemRows = await db.query(
-      'purchase_plan_items',
-      where: 'purchase_plan_id = ?',
-      whereArgs: [planId],
+  Future<PurchasePlan?> getByRecipeId(String recipeId) async {
+    final db = _database.db;
+    final planRows = await db.query(
+      'purchase_plans',
+      where: 'recipe_id = ?',
+      whereArgs: [recipeId],
+      orderBy: 'created_at DESC',
+      limit: 1,
     );
-
-    final items = itemRows
-        .map((row) {
-          final ingredientIdsRaw = row['ingredient_ids'] as String? ?? '[]';
-          final ingredientIds = List<String>.from(
-            (jsonDecode(ingredientIdsRaw) as List).map((e) => e.toString()),
-          );
-          return PurchasePlanIngredient(
-            title: row['title'] as String,
-            unit: row['unit'] as String?,
-            amount: (row['amount'] as num?)?.toDouble(),
-            packCount: (row['pack_count'] as num?)?.toInt(),
-            ingredientIds: ingredientIds,
-            costEur: (row['cost_eur'] as num).toDouble(),
-          );
-        })
-        .toList(growable: false);
-
-    return PurchasePlan(
-      id: planId,
-      recipeId: recipeId,
-      servings: servings,
-      totalCostEur: (planRow['total_cost_eur'] as num).toDouble(),
-      items: items,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(
-        (planRow['created_at'] as num).toInt(),
-      ),
-    );
+    if (planRows.isEmpty) return null;
+    return _mapPlanFromRow(db, planRows.first);
   }
 
   Future<void> deleteByRecipeId(String recipeId) async {
@@ -157,5 +135,45 @@ class PurchasePlanLocalDataSource {
         whereArgs: [recipeId, servings],
       );
     });
+  }
+
+  Future<PurchasePlan> _mapPlanFromRow(
+    Database db,
+    Map<String, Object?> planRow,
+  ) async {
+    final planId = planRow['id'] as String;
+    final itemRows = await db.query(
+      'purchase_plan_items',
+      where: 'purchase_plan_id = ?',
+      whereArgs: [planId],
+    );
+
+    final items = itemRows
+        .map((row) {
+          final ingredientIdsRaw = row['ingredient_ids'] as String? ?? '[]';
+          final ingredientIds = List<String>.from(
+            (jsonDecode(ingredientIdsRaw) as List).map((e) => e.toString()),
+          );
+          return PurchasePlanIngredient(
+            title: row['title'] as String,
+            unit: row['unit'] as String?,
+            amount: (row['amount'] as num?)?.toDouble(),
+            packCount: (row['pack_count'] as num?)?.toInt(),
+            ingredientIds: ingredientIds,
+            costEur: (row['cost_eur'] as num).toDouble(),
+          );
+        })
+        .toList(growable: false);
+
+    return PurchasePlan(
+      id: planId,
+      recipeId: planRow['recipe_id'] as String,
+      servings: (planRow['servings'] as num).toInt(),
+      totalCostEur: (planRow['total_cost_eur'] as num).toDouble(),
+      items: items,
+      createdAt: DateTime.fromMillisecondsSinceEpoch(
+        (planRow['created_at'] as num).toInt(),
+      ),
+    );
   }
 }

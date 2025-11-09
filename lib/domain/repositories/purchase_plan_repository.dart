@@ -9,4 +9,7 @@ abstract class PurchasePlanRepository {
     required int servings,
   });
   Future<void> deleteByRecipeId(String recipeId);
+  Future<PurchasePlan?> generateCombinedPlan({required List<Recipe> recipes});
+  Future<PurchasePlan?> getShoppingListPlan();
+  Future<void> deleteShoppingListPlan();
 }

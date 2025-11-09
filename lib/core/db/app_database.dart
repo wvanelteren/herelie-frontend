@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 
 class AppDatabase {
   static const _dbName = 'recipes.db';
-  static const _dbVersion = 4;
+  static const _dbVersion = 5;
 
   Database? _db;
   Database get db => _db!;
@@ -76,9 +76,32 @@ class AppDatabase {
             FOREIGN KEY(purchase_plan_id) REFERENCES purchase_plans(id) ON DELETE CASCADE
           )
         ''');
+    await db.execute('''
+          CREATE TABLE shopping_list_plan(
+            id TEXT PRIMARY KEY,
+            servings INTEGER NOT NULL,
+            total_cost_eur REAL NOT NULL,
+            created_at INTEGER NOT NULL
+          )
+        ''');
+    await db.execute('''
+          CREATE TABLE shopping_list_plan_items(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            plan_id TEXT NOT NULL,
+            title TEXT NOT NULL,
+            unit TEXT,
+            amount REAL,
+            pack_count INTEGER,
+            ingredient_ids TEXT NOT NULL,
+            cost_eur REAL NOT NULL,
+            FOREIGN KEY(plan_id) REFERENCES shopping_list_plan(id) ON DELETE CASCADE
+          )
+        ''');
   }
 
   Future<void> _dropSchema(Database db) async {
+    await db.execute('DROP TABLE IF EXISTS shopping_list_plan_items');
+    await db.execute('DROP TABLE IF EXISTS shopping_list_plan');
     await db.execute('DROP TABLE IF EXISTS purchase_plan_items');
     await db.execute('DROP TABLE IF EXISTS purchase_plans');
     await db.execute('DROP TABLE IF EXISTS ingredients');
