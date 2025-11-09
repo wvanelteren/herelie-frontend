@@ -95,7 +95,7 @@ class _InfoSection extends StatelessWidget {
 
 class _InfoContent extends StatelessWidget {
   final RecipeDetailState state;
-  const _InfoContent({super.key, required this.state});
+  const _InfoContent({required this.state});
 
   @override
   Widget build(BuildContext context) {

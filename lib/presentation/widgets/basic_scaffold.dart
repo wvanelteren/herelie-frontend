@@ -5,12 +5,14 @@ class BasicScaffold extends StatelessWidget {
   final List<Widget>? actions;
   final Widget child;
   final Widget? bottomArea;
+  final Widget? bottomNavigationBar;
 
   const BasicScaffold({
     super.key,
     this.title,
     this.actions,
     this.bottomArea,
+    this.bottomNavigationBar,
     required this.child,
   });
 
@@ -23,6 +25,15 @@ class BasicScaffold extends StatelessWidget {
               title: Text(title!),
               centerTitle: false,
               actions: actions,
+            ),
+      bottomNavigationBar: bottomNavigationBar == null
+          ? null
+          : SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: bottomNavigationBar!,
+              ),
             ),
       body: SafeArea(
         child: Padding(
